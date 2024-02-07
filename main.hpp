@@ -1,6 +1,8 @@
 #include <gtkmm.h>
 
-Glib::RefPtr<Gtk::Application> app;
+inline Glib::RefPtr<Gtk::Application> app;
+inline int timeout = 1;
+inline int volume = 0;
 
 class sysvol : public Gtk::Window {
 
@@ -18,3 +20,5 @@ class sysvol : public Gtk::Window {
 		void InitLayout();
 		void on_change();
 };
+
+inline sysvol* win;
