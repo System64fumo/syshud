@@ -18,6 +18,8 @@ bool timer_ticking = false;
 PulseAudio pa;
 std::thread thread_audio;
 
+bool first_run = false;
+
 // This is a terrible mess, Dear lord.
 bool timer() {
 	if (timeout == 1) {
@@ -36,6 +38,10 @@ void sysvol::on_callback() {
 		timeout = desired_timeout;
 		
 	else if (timeout == 1) {
+		if (!first_run) {
+			first_run = true;
+			return;
+		}
 		win->show();
 		timer_ticking = true;
 		timeout = desired_timeout;
