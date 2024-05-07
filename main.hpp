@@ -8,8 +8,10 @@ class sysvol : public Gtk::Window {
 
 	public:
 		Gtk::Scale scale_volume;
+		Gtk::Revealer revealer_box;
 		Glib::Dispatcher m_Dispatcher;
 		void on_callback();
+		bool hide_box();
 		sysvol();
 
 	private:

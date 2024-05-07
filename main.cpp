@@ -23,16 +23,21 @@ bool first_run = false;
 // This is a terrible mess, Dear lord.
 bool timer() {
 	if (timeout == 1) {
-		win->hide();
+		// TODO: Add cancel event
+		Glib::signal_timeout().connect([]() {
+			win->hide();
+			return false;
+		}, transition_time);
+		win->revealer_box.set_reveal_child(false);
 		timer_ticking = false;
 		return false;
 	}
 	else
 		timeout--;
-    return true;
+	return true;
 }
-
 void sysvol::on_callback() {
+
 	scale_volume.set_value(volume);
 	if (timer_ticking)
 		timeout = desired_timeout;
@@ -43,6 +48,7 @@ void sysvol::on_callback() {
 			return;
 		}
 		win->show();
+		revealer_box.set_reveal_child(true);
 		timer_ticking = true;
 		timeout = desired_timeout;
 		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
@@ -53,8 +59,17 @@ void sysvol::on_callback() {
 // What is this??? Am i becoming the next yandere dev?
 void sysvol::on_change() {
 	int volume = scale_volume.get_value();
+
+	// Check if we should draw the percentage
 	if (show_percentage)
 		label_volume.set_label(std::to_string(volume) + "\%");
+
+	// Check if we should draw the icons or not
+	if (icon_size == 0)
+		return;
+
+	// TODO: Add muted and possibly bluetooth icons? (If possible & Isn't complicated)
+	// Set the icon based on the volume
 	if (volume >= 75)
 		image_volume.set_from_icon_name("audio-volume-high-symbolic");
 	else if (volume >= 50)
@@ -112,7 +127,8 @@ sysvol::sysvol() {
 		if (show_percentage)
 			box_layout.append(label_volume);
 		box_layout.append(scale_volume);
-		box_layout.append(image_volume);
+		if (icon_size != 0)
+			box_layout.append(image_volume);
 		scale_volume.set_vexpand(true);
 		scale_volume.set_inverted(true);
 	}
@@ -120,7 +136,8 @@ sysvol::sysvol() {
 		// Horizontal layout
 		get_style_context()->add_class("horizontal");
 		set_default_size(width, height);
-		box_layout.append(image_volume);
+		if (icon_size != 0)
+			box_layout.append(image_volume);
 		box_layout.append(scale_volume);
 		if (show_percentage)
 			box_layout.append(label_volume);
@@ -129,16 +146,51 @@ sysvol::sysvol() {
 
 	// Initialize
 	set_hide_on_close(true);
-	set_child(box_layout);
-	image_volume.set_pixel_size(icon_size);
 
+	// Animations disabled
+	if (transition_time == 0)
+		set_child(box_layout);
+
+	// Animations enabled
+	else {
+		set_child(revealer_box);
+		revealer_box.set_child(box_layout);
+
+		Gtk::RevealerTransitionType transition_type = Gtk::RevealerTransitionType::SLIDE_UP;
+		switch (position) {
+			case 0:
+				revealer_box.set_valign(Gtk::Align::START);
+				transition_type = Gtk::RevealerTransitionType::SLIDE_DOWN;
+				break;
+			case 1:
+				revealer_box.set_halign(Gtk::Align::END);
+				transition_type = Gtk::RevealerTransitionType::SLIDE_LEFT;
+				break;
+			case 2:
+				revealer_box.set_valign(Gtk::Align::END);
+				transition_type = Gtk::RevealerTransitionType::SLIDE_UP;
+				break;
+			case 3:
+				revealer_box.set_halign(Gtk::Align::START);
+				transition_type = Gtk::RevealerTransitionType::SLIDE_RIGHT;
+				break;
+		}
+
+		revealer_box.set_transition_type(transition_type);
+		revealer_box.set_transition_duration(transition_time);
+		revealer_box.set_reveal_child(false);
+	}
 	scale_volume.set_range(0, 100);
 	scale_volume.set_increments(5, 10);
 
 	// TODO: Re enable this once code for setting volume has been added
 	scale_volume.set_sensitive(false);
 
-	image_volume.set_size_request(height, height);
+	if (icon_size != 0) {
+		image_volume.set_pixel_size(icon_size);
+		image_volume.set_size_request(height, height);
+	}
+
 	if (show_percentage)
 		label_volume.set_size_request(height, height);
 
@@ -174,7 +226,7 @@ int main(int argc, char* argv[]) {
 
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dh")) {
+		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dT:dh")) {
 			case 'p':
 				position = std::stoi(optarg);
 				continue;
@@ -203,6 +255,10 @@ int main(int argc, char* argv[]) {
 				desired_timeout = std::stoi(optarg);
 				continue;
 
+			case 'T':
+				transition_time = std::stoi(optarg);
+				continue;
+
 			case 'h':
 			default :
 				printf("usage:\n");
@@ -215,6 +271,7 @@ int main(int argc, char* argv[]) {
 				printf("  -P	Hide percentage\n");
 				printf("  -m	Set margins\n");
 				printf("  -t	Set timeout\n");
+				printf("  -T	Set transition time\n");
 				printf("  -h	Show this help message\n");
 				return 0;
 
