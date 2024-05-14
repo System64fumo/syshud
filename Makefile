@@ -27,4 +27,4 @@ sysvol: main.o pulse.o
 
 install: sysvol
 	mkdir -p $(DESTDIR)/bin
-	install ./sysmenu $(DESTDIR)/bin/sysvol
+	install ./sysvol $(DESTDIR)/bin/sysvol
