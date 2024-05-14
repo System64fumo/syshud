@@ -1,3 +1,4 @@
+CXXFLAGS=-march=native -mtune=native -Os -s -Wall
 all: sysvol
 
 clean:
@@ -5,20 +6,20 @@ clean:
 	rm sysvol
 
 pulse.o: src/pulse.cpp
-	g++ -g -c -o pulse.o src/pulse.cpp \
+	g++ -o pulse.o -c src/pulse.cpp \
 	$$(pkg-config gtkmm-4.0 --cflags --libs) \
 	$$(pkg-config libpulse --cflags --libs) \
-	-Wall -O2
+	$(CXXFLAGS)
 
 main.o: src/main.cpp
-	g++ -g -c -o main.o src/main.cpp \
+	g++ -o main.o -c src/main.cpp \
 	$$(pkg-config gtkmm-4.0 --cflags --libs) \
 	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
-	-Wall -pthread -O2
+	$(CXXFLAGS) -pthread
 
 sysvol: main.o pulse.o
 	g++ -o sysvol main.o pulse.o \
 	$$(pkg-config gtkmm-4.0 --cflags --libs) \
 	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
-	$$(pkg-config libpulse --cflags --libs)
-	strip sysvol
+	$$(pkg-config libpulse --cflags --libs) \
+	$(CXXFLAGS)
