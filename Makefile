@@ -1,4 +1,5 @@
 CXXFLAGS=-march=native -mtune=native -Os -s -Wall
+DESTDIR=$(HOME)/.local
 all: sysvol
 
 clean:
@@ -23,3 +24,7 @@ sysvol: main.o pulse.o
 	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
 	$$(pkg-config libpulse --cflags --libs) \
 	$(CXXFLAGS)
+
+install: sysvol
+	mkdir -p $(DESTDIR)/bin
+	install ./sysmenu $(DESTDIR)/bin/sysvol
