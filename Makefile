@@ -4,14 +4,14 @@ clean:
 	rm ./*.o
 	rm sysvol
 
-pulse.o: pulse.cpp
-	g++ -g -c -o pulse.o pulse.cpp \
+pulse.o: src/pulse.cpp
+	g++ -g -c -o pulse.o src/pulse.cpp \
 	$$(pkg-config gtkmm-4.0 --cflags --libs) \
 	$$(pkg-config libpulse --cflags --libs) \
 	-Wall -O2
 
-main.o: main.cpp
-	g++ -g -c -o main.o main.cpp \
+main.o: src/main.cpp
+	g++ -g -c -o main.o src/main.cpp \
 	$$(pkg-config gtkmm-4.0 --cflags --libs) \
 	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
 	-Wall -pthread -O2
