@@ -1,30 +1,25 @@
-CXXFLAGS=-march=native -mtune=native -Os -s -Wall
-DESTDIR=$(HOME)/.local
-all: sysvol
+EXEC = sysvol
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 libpulse
+SRCS +=	$(wildcard src/*.cpp)
+OBJS = $(SRCS:.cpp=.o)
+DESTDIR = $(HOME)/.local
+
+CXXFLAGS = -march=native -mtune=native -Os -s -Wall
+CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
+LDFLAGS += $(shell pkg-config --libs $(PKGS))
+
+$(EXEC): $(OBJS)
+	$(CXX) -o $(EXEC) $(OBJS) \
+	$(LDFLAGS) \
+	$(CXXFLAGS)
+
+%.o: %.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@ \
+	$(CXXFLAGS)
+
+install: $(EXEC)
+	mkdir -p $(DESTDIR)/bin
+	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
 
 clean:
-	rm ./*.o
-	rm sysvol
-
-pulse.o: src/pulse.cpp
-	g++ -o pulse.o -c src/pulse.cpp \
-	$$(pkg-config gtkmm-4.0 --cflags --libs) \
-	$$(pkg-config libpulse --cflags --libs) \
-	$(CXXFLAGS)
-
-main.o: src/main.cpp
-	g++ -o main.o -c src/main.cpp \
-	$$(pkg-config gtkmm-4.0 --cflags --libs) \
-	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
-	$(CXXFLAGS) -pthread
-
-sysvol: main.o pulse.o
-	g++ -o sysvol main.o pulse.o \
-	$$(pkg-config gtkmm-4.0 --cflags --libs) \
-	$$(pkg-config gtk4-layer-shell-0 --cflags --libs) \
-	$$(pkg-config libpulse --cflags --libs) \
-	$(CXXFLAGS)
-
-install: sysvol
-	mkdir -p $(DESTDIR)/bin
-	install ./sysvol $(DESTDIR)/bin/sysvol
+	rm $(EXEC) $(SRCS:.cpp=.o)
