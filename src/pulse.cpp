@@ -1,6 +1,6 @@
 #include "main.hpp"
 #include "pulse.hpp"
-#include <stdio.h>
+#include <iostream>
 
 const char* default_sink;
 
@@ -87,7 +87,7 @@ void PulseAudio::context_state_callback(pa_context *c, void *userdata) {
 
 		case PA_CONTEXT_FAILED:
 		default:
-			fprintf(stderr, "PulseAudio failed to connect.\n");
+			std::cerr << "PulseAudio failed to connect." << std::endl;
 				pa->quit(1);
 			break;
 	}

@@ -10,8 +10,6 @@
 #include <thread>
 #include <filesystem>
 #include <string>
-
-#include <stdio.h>
 #include <signal.h>
 
 bool timer_ticking = false;
@@ -261,18 +259,18 @@ int main(int argc, char* argv[]) {
 
 			case 'h':
 			default :
-				printf("usage:\n");
-				printf("  sysvol [argument...]:\n\n");
-				printf("arguments:\n");
-				printf("  -p	Set position\n");
-				printf("  -W	Set window width\n");
-				printf("  -H	Set window Height\n");
-				printf("  -i	Set icon size\n");
-				printf("  -P	Hide percentage\n");
-				printf("  -m	Set margins\n");
-				printf("  -t	Set timeout\n");
-				printf("  -T	Set transition time\n");
-				printf("  -h	Show this help message\n");
+				std::cout << "usage:" << std::endl;
+				std::cout << "  sysvol [argument...]:\n" << std::endl;
+				std::cout << "arguments:" << std::endl;
+				std::cout << "  -p	Set position" << std::endl;
+				std::cout << "  -W	Set window width" << std::endl;
+				std::cout << "  -H	Set window Height" << std::endl;
+				std::cout << "  -i	Set icon size" << std::endl;
+				std::cout << "  -P	Hide percentage" << std::endl;
+				std::cout << "  -m	Set margins" << std::endl;
+				std::cout << "  -t	Set timeout" << std::endl;
+				std::cout << "  -T	Set transition time" << std::endl;
+				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;
 
 			case -1:
