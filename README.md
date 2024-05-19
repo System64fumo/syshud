@@ -2,11 +2,6 @@
 Sysvol is a basic but functional volume indicator written in gtkmm4<br>
 ![preview](https://github.com/AmirDahan/sysvol/blob/main/preview.jpg "preview")
 
-> [!NOTE]
-> sysvol now supports wireplumber,<br>
-> But as of yet the only way to enable it is by manually editing the config.hpp file<br>
-> Wireplumber will become the default after i clean up the code a little<br>
-
 # Configuration
 sysvol can be configured in 2 ways<br>
 1: By changing config.hpp and recompiling (Suckless style)<br>
@@ -21,6 +16,11 @@ arguments:
   -m	Set margins
   -t	Set timeout
   -T	Set transition time (0 disables animations)
+```
+
+Pulseaudio support can be enabled instead of wireplumber by compiling using:<br>
+```
+make PULSEAUDIO=1
 ```
 
 # Theming
