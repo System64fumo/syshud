@@ -12,3 +12,4 @@ bool show_percentage = true;	// true
 int margin = 10;				// 10
 int desired_timeout = 3;		// 3
 int transition_time = 250;		// 250
+bool wireplumber = false;		// true
