@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "config.hpp"
 #include "pulse.hpp"
+#include "wireplumber.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <gtkmm/cssprovider.h>
@@ -10,10 +11,13 @@
 #include <thread>
 #include <filesystem>
 #include <string>
+
+#include <stdio.h>
 #include <signal.h>
 
 bool timer_ticking = false;
 PulseAudio pa;
+sysvol_wireplumber *sysvol_wp;
 std::thread thread_audio;
 
 bool first_run = false;
@@ -35,6 +39,8 @@ bool timer() {
 	return true;
 }
 void sysvol::on_callback() {
+	if (wireplumber)
+		volume = sysvol_wp->volume;
 
 	scale_volume.set_value(volume);
 	if (timer_ticking)
@@ -79,10 +85,16 @@ void sysvol::on_change() {
 }
 
 
+
 void audio_server() {
-	pa = PulseAudio();
-	pa.initialize();
-	pa.run();
+	if (wireplumber) {
+		sysvol_wp = new sysvol_wireplumber(win);
+	}
+	else {
+		pa = PulseAudio();
+		pa.initialize();
+		pa.run();
+	}
 }
 
 sysvol::sysvol() {
@@ -209,8 +221,13 @@ sysvol::sysvol() {
 }
 
 void quit(int signum) {
-	// Disconnect audio
-	pa.quit(0);
+	if (wireplumber) {
+		// TODO: Cleanup wireplumber stuff
+	}
+	else {
+		// Disconnect pulseaudio
+		pa.quit(0);
+	}
 	thread_audio.join();
 
 	// Remove window
@@ -221,6 +238,9 @@ void quit(int signum) {
 }
 
 int main(int argc, char* argv[]) {
+
+	// TODO: Handle wireplumber,
+	// Ideally not configurable here but at compile time
 
 	// Read launch arguments
 	while (true) {

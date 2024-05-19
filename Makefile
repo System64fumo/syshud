@@ -1,5 +1,5 @@
 EXEC = sysvol
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 libpulse
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 libpulse wireplumber-0.5
 SRCS +=	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local

@@ -2,6 +2,11 @@
 Sysvol is a basic but functional volume indicator written in gtkmm4<br>
 ![preview](https://github.com/AmirDahan/sysvol/blob/main/preview.jpg "preview")
 
+> [!NOTE]
+> sysvol now supports wireplumber,<br>
+> But as of yet the only way to enable it is by manually editing the config.hpp file<br>
+> Wireplumber will become the default after i clean up the code a little<br>
+
 # Configuration
 sysvol can be configured in 2 ways<br>
 1: By changing config.hpp and recompiling (Suckless style)<br>
@@ -21,3 +26,6 @@ arguments:
 # Theming
 sysvol uses your gtk4 theme by default, However it can be also load custom css,<br>
 Just copy the included volume.css file to ~/.config/sys64/volume.css<br>
+
+# Credits
+Many thanks to [waybar](https://github.com/Alexays/Waybar) for showing how to write wireplumber stuff<br>

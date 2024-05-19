@@ -1,3 +1,4 @@
+#pragma once
 #include <gtkmm.h>
 
 inline Glib::RefPtr<Gtk::Application> app;
