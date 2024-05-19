@@ -1,10 +1,21 @@
 EXEC = sysvol
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 libpulse wireplumber-0.5
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 
 SRCS +=	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
 
-CXXFLAGS = -march=native -mtune=native -Os -s -Wall
+ifeq ($(PULSEAUDIO),1)
+	PKGS += libpulse
+	CXXFLAGS += -DPULSEAUDIO
+	SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
+	OBJS := $(filter-out src/wireplumber.o,$(OBJS))
+else
+	PKGS += wireplumber-0.5
+	SRCS := $(filter-out src/pulse.cpp,$(SRCS))
+	OBJS := $(filter-out src/pulse.o,$(OBJS))
+endif
+
+CXXFLAGS += -march=native -mtune=native -Os -s -Wall
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
