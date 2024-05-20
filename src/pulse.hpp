@@ -13,10 +13,11 @@ class PulseAudio {
 		pa_signal_event* _signal;
 
 	public:
-		PulseAudio()
-		: _mainloop(NULL), _mainloop_api(NULL), _context(NULL), _signal(NULL)
-	{
-	}
+		PulseAudio() : 
+			_mainloop(NULL),
+			_mainloop_api(NULL),
+			_context(NULL),
+			_signal(NULL) {}
 
 	bool initialize();
 	int run();

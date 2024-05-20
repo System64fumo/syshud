@@ -3,11 +3,13 @@
 
 inline Glib::RefPtr<Gtk::Application> app;
 inline int timeout = 1;
-inline int volume = 0;
 
 class sysvol : public Gtk::Window {
 
 	public:
+		int volume;
+		bool muted;
+
 		Gtk::Scale scale_volume;
 		Gtk::Revealer revealer_box;
 		Glib::Dispatcher m_Dispatcher;
