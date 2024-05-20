@@ -4,7 +4,10 @@
 #include <cmath>
 #include <wp/wp.h>
 
+// Internal states
+bool previous_mute;
 double previous_volume;
+
 bool sysvol_wireplumber::isValidNodeId(uint32_t id) { return id > 0 && id < G_MAXUINT32; }
 
 void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
@@ -23,12 +26,17 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	double temp_volume;
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
 	g_variant_lookup(variant, "mute", "b", &self->win->muted);
+	// There is supposed to be a freeup thing here,
+	// Too bad it segfaults!
 
-	// TODO: Trigger the callback when muted
-	if (previous_volume == temp_volume)
+	// Ignore changes if the values are the same
+	if (previous_volume == temp_volume && previous_mute == self->win->muted)
 		return;
-	previous_volume = temp_volume;
 
+	previous_volume = temp_volume;
+	previous_mute = self->win->muted;
+
+	// Set values and trigger an update
 	self->win->volume = round(temp_volume * 100.0);
 	self->win->on_callback();
 }

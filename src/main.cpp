@@ -43,6 +43,7 @@ bool timer() {
 	return true;
 }
 void sysvol::on_callback() {
+	on_change();
 	scale_volume.set_value(volume);
 	if (timer_ticking)
 		timeout = desired_timeout;
@@ -60,11 +61,7 @@ void sysvol::on_callback() {
 	}
 }
 
-// TODO: Replace if else statements with something better
-// What is this??? Am i becoming the next yandere dev?
 void sysvol::on_change() {
-	int volume = scale_volume.get_value();
-
 	// Check if we should draw the percentage
 	if (show_percentage)
 		label_volume.set_label(std::to_string(volume) + "\%");
@@ -73,8 +70,12 @@ void sysvol::on_change() {
 	if (icon_size == 0)
 		return;
 
-	// TODO: Add muted and possibly bluetooth icons? (If possible & Isn't complicated)
-	// Set the icon based on the volume
+	// Check if we're muted
+	if (muted) {
+		image_volume.set_from_icon_name("audio-volume-muted-blocking-symbolic");
+		return;
+	}
+
 	if (volume >= 75)
 		image_volume.set_from_icon_name("audio-volume-high-symbolic");
 	else if (volume >= 50)
