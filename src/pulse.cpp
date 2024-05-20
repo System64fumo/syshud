@@ -104,6 +104,9 @@ void PulseAudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t 
 
 	if (op)
 		pa_operation_unref(op);
+
+	if (facility == PA_SUBSCRIPTION_EVENT_SERVER)
+		pa_context_get_server_info(c, server_info_callback, userdata);
 }
 
 void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
@@ -117,6 +120,12 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 	int previous_volume = win->volume;
 	win->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
 	if (win->volume != previous_volume)
+		win->m_Dispatcher.emit();
+
+	// This could still be better..
+	bool previous_mute = win->muted;
+	win->muted = i->mute;
+	if (win->muted != previous_mute)
 		win->m_Dispatcher.emit();
 }
 
