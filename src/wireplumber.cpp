@@ -20,15 +20,16 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	if (variant == nullptr)
 		throw std::runtime_error("Node does not support volume\n");
 
-	g_variant_lookup(variant, "volume", "d", &self->volume);
-	g_variant_lookup(variant, "mute", "b", &self->muted);
+	double temp_volume;
+	g_variant_lookup(variant, "volume", "d", &temp_volume);
+	g_variant_lookup(variant, "mute", "b", &self->win->muted);
 
 	// TODO: Trigger the callback when muted
-	if (previous_volume == self->volume)
+	if (previous_volume == temp_volume)
 		return;
-	previous_volume = self->volume;
+	previous_volume = temp_volume;
 
-	self->volume = round(self->volume * 100.0);
+	self->win->volume = round(temp_volume * 100.0);
 	self->win->on_callback();
 }
 

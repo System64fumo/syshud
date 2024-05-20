@@ -43,12 +43,6 @@ bool timer() {
 	return true;
 }
 void sysvol::on_callback() {
-	#ifdef PULSEAUDIO
-	#else
-	if (wireplumber)
-		volume = sysvol_wp->volume;
-	#endif
-
 	scale_volume.set_value(volume);
 	if (timer_ticking)
 		timeout = desired_timeout;

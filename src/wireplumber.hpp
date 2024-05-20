@@ -6,8 +6,6 @@
 
 class sysvol_wireplumber {
 	public:
-		double volume = 0;
-		bool muted = false;
 		sysvol_wireplumber(sysvol* win);
 
 	private:

@@ -114,9 +114,9 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 		return;
 
 	// This could be better..
-	int previous_volume = volume;
-	volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
-	if (volume != previous_volume)
+	int previous_volume = win->volume;
+	win->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
+	if (win->volume != previous_volume)
 		win->m_Dispatcher.emit();
 }
 
