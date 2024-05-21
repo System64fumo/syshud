@@ -1,6 +1,6 @@
 # Sysvol
 Sysvol is a basic but functional volume indicator written in gtkmm4<br>
-![preview](https://github.com/AmirDahan/sysvol/blob/main/preview.jpg "preview")
+![preview](https://github.com/AmirDahan/sysvol/blob/main/preview.gif "preview")
 
 # Configuration
 sysvol can be configured in 2 ways<br>

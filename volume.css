@@ -1,55 +1,67 @@
 window {
 	background: transparent;
 }
-revealer {
-	background: rgba(0, 0, 0, 0.9);
+
+revealer > * {
+	background: @theme_bg_color;
 	border-radius: 25px;
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	border: 1px solid @borders;
 }
+
 scale {
 	margin: 0px;
 	padding: 0px;
 }
 label {
-	color: rgba(255, 255, 255, 0.5);
+	color: alpha(@theme_fg_color, 0.5);
 }
 
 /* Horizontal layout */
 scale.horizontal {
-    padding: 0px;
+	padding: 0px;
+	min-height: 5px;
 }
 scale.horizontal trough {
-    border-radius: 10px;
-    background: alpha(currentColor, 0.1);
+	border-radius: 3px;
+	background: alpha(currentColor, 0.1);
+	min-height: 5px;
+	padding: 0px;
 }
 scale.horizontal highlight {
-    border-radius: 10px;
-    min-height: 20px;
-    background: alpha(@accent_bg_color, 0.75);
+	border-radius: 3px;
+	min-height: 5px;
+	background: alpha(@theme_fg_color, 0.75);
+	margin: 0px;
 }
 scale.horizontal slider {
-    margin: 0px;
-    background: transparent;
-    box-shadow: none;
-    padding: 0px;
+	margin: 0px;
+	background: transparent;
+	min-height: 5px;
+	box-shadow: none;
+	padding: 0px;
 }
 
 /* Vertical layout */
 scale.vertical {
-    padding: 0px;
+	padding: 0px;
+	min-width: 5px;
 }
 scale.vertical trough {
-    border-radius: 10px;
-    background: alpha(currentColor, 0.1);
+	border-radius: 3px;
+	background: alpha(currentColor, 0.1);
+	min-width: 5px;
+	padding: 0px;
 }
 scale.vertical highlight {
-    border-radius: 10px;
-    min-width: 20px;
-    background: alpha(@accent_bg_color, 0.75);
+	border-radius: 3px;
+	min-width: 5px;
+	background: alpha(@theme_fg_color, 0.75);
+	margin: 0px;
 }
 scale.vertical slider {
-    margin: 0px;
-    background: transparent;
-    box-shadow: none;
-    padding: 0px;
+	margin: 0px;
+	background: transparent;
+	min-width: 5px;
+	box-shadow: none;
+	padding: 0px;
 }
