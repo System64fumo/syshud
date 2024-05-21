@@ -165,3 +165,12 @@ sysvol_wireplumber::sysvol_wireplumber(sysvol* win) {
 							"default-nodes-api", nullptr, (GAsyncReadyCallback)onDefaultNodesApiLoaded,
 							this);
 }
+
+sysvol_wireplumber::~sysvol_wireplumber() {
+	wp_core_disconnect(core);
+	g_clear_pointer(&apis, g_ptr_array_unref);
+	g_clear_object(&om);
+	g_clear_object(&core);
+	g_clear_object(&mixer_api);
+	g_clear_object(&def_nodes_api);
+}
