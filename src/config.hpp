@@ -3,12 +3,12 @@
 	Can be configured instead of using launch arguments.
 */
 
-// Current						Default
-int position = 2;				// 2
-int width = 300;				// 300
-int height = 50;				// 50
-int icon_size = 26;				// 26
-bool show_percentage = true;	// true
-int margin = 10;				// 10
-int desired_timeout = 3;		// 3
-int transition_time = 250;		// 250
+// Current							Default
+inline int position = 2;			// 2
+inline int width = 300;				// 300
+inline int height = 50;				// 50
+inline int icon_size = 26;			// 26
+inline bool show_percentage = true;	// true
+inline int margin = 10;				// 10
+inline int desired_timeout = 3;		// 3
+inline int transition_time = 250;	// 250
