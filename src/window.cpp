@@ -36,7 +36,6 @@ sysvol::sysvol() {
 
 	}
 	gtk_layer_set_anchor(gobj(), edge, true);
-	gtk_layer_set_margin(gobj(), edge, margin);
 
 	// Set layout
 	if (position % 2) {
@@ -68,6 +67,9 @@ sysvol::sysvol() {
 
 	// Initialize
 	set_hide_on_close(true);
+
+	// Margins
+	box_layout.set_margin(margin);
 
 	// Animations disabled
 	if (transition_time == 0)
