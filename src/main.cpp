@@ -34,6 +34,8 @@ void quit(int signum) {
 	#ifdef PULSEAUDIO
 	// Disconnect pulseaudio
 	pa.quit(0);
+	#else
+	delete(sysvol_wp);
 	#endif
 
 	thread_audio.join();

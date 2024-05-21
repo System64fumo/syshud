@@ -7,6 +7,7 @@
 class sysvol_wireplumber {
 	public:
 		sysvol_wireplumber(sysvol* win);
+		virtual ~sysvol_wireplumber();
 
 	private:
 		sysvol* win;
