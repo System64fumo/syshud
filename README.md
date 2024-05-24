@@ -1,6 +1,6 @@
 # Sysvol
 Sysvol is a basic but functional volume indicator written in gtkmm4<br>
-![preview](https://github.com/AmirDahan/sysvol/blob/main/preview.gif "preview")
+![preview](https://github.com/System64fumo/sysvol/blob/main/preview.gif "preview")
 
 # Configuration
 sysvol can be configured in 2 ways<br>
@@ -28,4 +28,5 @@ sysvol uses your gtk4 theme by default, However it can be also load custom css,<
 Just copy the included volume.css file to ~/.config/sys64/volume.css<br>
 
 # Credits
-Many thanks to [waybar](https://github.com/Alexays/Waybar) for showing how to write wireplumber stuff<br>
+[Jason White](https://gist.github.com/jasonwhite/1df6ee4b5039358701d2) for showing how to write pulseaudio stuff<br>
+[waybar](https://github.com/Alexays/Waybar) for showing how to write wireplumber stuff<br>

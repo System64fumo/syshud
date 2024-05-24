@@ -1,26 +1,20 @@
-/*
- *	Many thanks to Jason White for this.
- *	https://gist.github.com/jasonwhite/1df6ee4b5039358701d2
- */
-
 #include <pulse/pulseaudio.h>
 
 class PulseAudio {
 	private:
-		pa_mainloop* _mainloop;
-		pa_mainloop_api* _mainloop_api;
-		pa_context* _context;
-		pa_signal_event* _signal;
+		pa_mainloop* mainloop;
+		pa_mainloop_api* mainloop_api;
+		pa_context* context;
+		pa_signal_event* signal;
 
 	public:
 		PulseAudio() : 
-			_mainloop(NULL),
-			_mainloop_api(NULL),
-			_context(NULL),
-			_signal(NULL) {}
+			mainloop(NULL),
+			mainloop_api(NULL),
+			context(NULL),
+			signal(NULL) {}
 
-	bool initialize();
-	int run();
+	int initialize();
 	void quit(int ret);
 	void destroy();
 	~PulseAudio();

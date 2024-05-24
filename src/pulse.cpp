@@ -4,56 +4,41 @@
 
 const char* default_sink;
 
-bool PulseAudio::initialize() {
-		_mainloop = pa_mainloop_new();
-		if (!_mainloop)
-			return false;
+int PulseAudio::initialize() {
+		int ret = 1;
+		mainloop = pa_mainloop_new();
+		mainloop_api = pa_mainloop_get_api(mainloop);
+		pa_signal_init(mainloop_api);
+		context = pa_context_new(mainloop_api, "sysvol");
+		ret = pa_context_connect(context, NULL, PA_CONTEXT_NOAUTOSPAWN, NULL);
+		if (ret < 0)
+			return ret;
 
-		_mainloop_api = pa_mainloop_get_api(_mainloop);
-
-		if (pa_signal_init(_mainloop_api) != 0)
-			return false;
-
-		_context = pa_context_new(_mainloop_api, "sysvol");
-		if (!_context)
-			return false;
-
-		if (pa_context_connect(_context, NULL, PA_CONTEXT_NOAUTOSPAWN, NULL) < 0)
-			return false;
-
-		pa_context_set_state_callback(_context, context_state_callback, this);
-
-		return true;
-	}
-
-int PulseAudio::run() {
-	int ret = 1;
-	if (pa_mainloop_run(_mainloop, &ret) < 0)
+		pa_context_set_state_callback(context, context_state_callback, this);
+		pa_mainloop_run(mainloop, &ret);
 		return ret;
-
-	return ret;
 }
 
 void PulseAudio::quit(int ret = 0) {
-	_mainloop_api->quit(_mainloop_api, ret);
+	mainloop_api->quit(mainloop_api, ret);
 }
 
 void PulseAudio::destroy() {
-	if (_context) {
-		pa_context_unref(_context);
-		_context = NULL;
+	if (context) {
+		pa_context_unref(context);
+		context = NULL;
 	}
 
-	if (_signal) {
-		pa_signal_free(_signal);
+	if (signal) {
+		pa_signal_free(signal);
 		pa_signal_done();
-		_signal = NULL;
+		signal = NULL;
 	}
 
-	if (_mainloop) {
-		pa_mainloop_free(_mainloop);
-		_mainloop = NULL;
-		_mainloop_api = NULL;
+	if (mainloop) {
+		pa_mainloop_free(mainloop);
+		mainloop = NULL;
+		mainloop_api = NULL;
 	}
 }
 
@@ -112,20 +97,20 @@ void PulseAudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t 
 void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
 	if (!i)
 		return;
-		
+
 	if (strcmp(i->name, default_sink))
 		return;
 
-	// This could be better..
+	// Get previous values
 	int previous_volume = win->volume;
-	win->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
-	if (win->volume != previous_volume)
-		win->m_Dispatcher.emit();
-
-	// This could still be better..
 	bool previous_mute = win->muted;
+
+	// Set new values
+	win->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
 	win->muted = i->mute;
-	if (win->muted != previous_mute)
+
+	// Trigger an update if needed
+	if (win->volume != previous_volume || win->muted != previous_mute)
 		win->m_Dispatcher.emit();
 }
 

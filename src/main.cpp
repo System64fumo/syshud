@@ -20,16 +20,6 @@ sysvol_wireplumber *sysvol_wp;
 
 std::thread thread_audio;
 
-void audio_server() {
-#ifdef PULSEAUDIO
-	pa = PulseAudio();
-	pa.initialize();
-	pa.run();
-#else
-	sysvol_wp = new sysvol_wireplumber(win);
-#endif
-}
-
 void quit(int signum) {
 	#ifdef PULSEAUDIO
 	// Disconnect pulseaudio
@@ -45,6 +35,16 @@ void quit(int signum) {
 	app->remove_window(*win);
 	delete win;
 	app->quit();
+}
+
+void audio_server() {
+#ifdef PULSEAUDIO
+	pa = PulseAudio();
+	if (pa.initialize() != 0)
+		quit(0);
+#else
+	sysvol_wp = new sysvol_wireplumber(win);
+#endif
 }
 
 int main(int argc, char* argv[]) {
