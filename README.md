@@ -15,6 +15,7 @@ arguments:
   -P	Hide percentage
   -m	Set margins
   -t	Set timeout
+  -v	Prints version info
   -T	Set transition time (0 disables animations)
 ```
 
