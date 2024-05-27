@@ -1,6 +1,7 @@
 #include "main.hpp"
 #include "window.hpp"
 #include "config.hpp"
+#include "git_info.hpp"
 
 #ifdef PULSEAUDIO
 #include "pulse.hpp"
@@ -50,7 +51,7 @@ void audio_server() {
 int main(int argc, char* argv[]) {
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dT:dh")) {
+		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dT:dvh")) {
 			case 'p':
 				position = std::stoi(optarg);
 				continue;
@@ -83,6 +84,11 @@ int main(int argc, char* argv[]) {
 				transition_time = std::stoi(optarg);
 				continue;
 
+			case 'v':
+				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
+				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
+				return 0;
+
 			case 'h':
 			default :
 				std::cout << "usage:" << std::endl;
@@ -96,6 +102,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -m	Set margins" << std::endl;
 				std::cout << "  -t	Set timeout" << std::endl;
 				std::cout << "  -T	Set transition time" << std::endl;
+				std::cout << "  -v	Prints version info" << std::endl;
 				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;
 
