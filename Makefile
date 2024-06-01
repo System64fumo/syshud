@@ -15,7 +15,7 @@ else
 	OBJS := $(filter-out src/pulse.o,$(OBJS))
 endif
 
-CXXFLAGS += -march=native -mtune=native -Os -s -Wall
+CXXFLAGS += -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 

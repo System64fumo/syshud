@@ -20,8 +20,10 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	}
 
 	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
-	if (variant == nullptr)
-		throw std::runtime_error("Node does not support volume\n");
+	if (variant == nullptr) {
+		std::cerr << "Node does not support volume\n" << std::endl;
+		return;
+	}
 
 	double temp_volume;
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
@@ -71,7 +73,7 @@ void sysvol_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, sysvo
 	if (wp_object_activate_finish(p, res, &error) == 0) {
 		std::cerr << "error activating plugin: " << pluginName << std::endl;
 		std::cerr << error->message << std::endl;
-		throw std::runtime_error(error->message);
+		return;
 	}
 
 	if (--self->pending_plugins == 0) {
@@ -128,13 +130,17 @@ void sysvol_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res,
 void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
 	self->def_nodes_api = wp_plugin_find(self->core, "default-nodes-api");
 
-	if (self->def_nodes_api == nullptr)
-		throw std::runtime_error("Default nodes API is not loaded\n");
+	if (self->def_nodes_api == nullptr) {
+		std::cerr << "Default nodes API is not loaded\n" << std::endl;
+		return;
+	}
 
 	self->mixer_api = wp_plugin_find(self->core, "mixer-api");
 
-	if (self->mixer_api == nullptr)
-		throw std::runtime_error("Mixer api is not loaded\n");
+	if (self->mixer_api == nullptr) {
+		std::cerr << "Mixer api is not loaded\n" << std::endl;
+		return;
+	}
 
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
 
