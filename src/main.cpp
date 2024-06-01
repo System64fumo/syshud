@@ -49,6 +49,7 @@ void audio_server() {
 }
 
 int main(int argc, char* argv[]) {
+	#ifdef RUNTIME_CONFIG
 	// Read launch arguments
 	while (true) {
 		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dT:dvh")) {
@@ -112,6 +113,7 @@ int main(int argc, char* argv[]) {
 
 			break;
 	}
+	#endif
 
 	signal(SIGINT, quit);
 
