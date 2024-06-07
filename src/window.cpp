@@ -120,7 +120,7 @@ sysvol::sysvol() {
 
 	on_change();
 	scale_volume.signal_value_changed().connect(sigc::mem_fun(*this, &sysvol::on_change));
-	m_Dispatcher.connect(sigc::mem_fun(*this, &sysvol::on_callback));
+	dispatcher_callback.connect(sigc::mem_fun(*this, &sysvol::on_callback));
 
 	// Load custom css
 	std::string home_dir = getenv("HOME");
@@ -160,6 +160,11 @@ void sysvol::on_change() {
 }
 
 void sysvol::on_callback() {
+	#ifndef PULSEAUDIO
+	volume = sysvol_wp->volume;
+	muted = sysvol_wp->muted;
+	#endif
+
 	on_change();
 	scale_volume.set_value(volume);
 	if (timer_ticking)

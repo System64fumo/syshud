@@ -1,16 +1,18 @@
 #pragma once
-
-#include "main.hpp"
+#include <glibmm.h>
 #include <cstdint>
 #include <wp/wp.h>
 
 class sysvol_wireplumber {
 	public:
-		sysvol_wireplumber(sysvol* win);
+		int volume;
+		bool muted;
+
+		sysvol_wireplumber(Glib::Dispatcher* callback);
 		virtual ~sysvol_wireplumber();
 
 	private:
-		sysvol* win;
+		Glib::Dispatcher* callback;
 
 		GPtrArray *apis;
 		WpCore *core;

@@ -3,15 +3,6 @@
 #include "config.hpp"
 #include "git_info.hpp"
 
-#ifdef PULSEAUDIO
-#include "pulse.hpp"
-PulseAudio pa;
-#else
-#include "wireplumber.hpp"
-sysvol_wireplumber *sysvol_wp;
-#endif
-
-#include <glibmm.h>
 #include <unistd.h>
 #include <iostream>
 #include <thread>
@@ -26,7 +17,7 @@ void quit(int signum) {
 	// Disconnect pulseaudio
 	pa.quit(0);
 	#else
-	delete(sysvol_wp);
+	delete(win->sysvol_wp);
 	#endif
 
 	thread_audio.join();
@@ -44,7 +35,7 @@ void audio_server() {
 	if (pa.initialize() != 0)
 		quit(0);
 #else
-	sysvol_wp = new sysvol_wireplumber(win);
+	win->sysvol_wp = new sysvol_wireplumber(&win->dispatcher_callback);
 #endif
 }
 
