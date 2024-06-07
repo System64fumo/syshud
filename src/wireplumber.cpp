@@ -27,20 +27,20 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 
 	double temp_volume;
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
-	g_variant_lookup(variant, "mute", "b", &self->win->muted);
+	g_variant_lookup(variant, "mute", "b", &self->muted);
 	// There is supposed to be a freeup thing here,
 	// Too bad it segfaults!
 
 	// Ignore changes if the values are the same
-	if (previous_volume == temp_volume && previous_mute == self->win->muted)
+	if (previous_volume == temp_volume && previous_mute == self->muted)
 		return;
 
 	previous_volume = temp_volume;
-	previous_mute = self->win->muted;
+	previous_mute = self->muted;
 
-	// Set values and trigger an update
-	self->win->volume = round(temp_volume * 100.0);
-	self->win->on_callback();
+	// Set values and trigger a callback
+	self->volume = round(temp_volume * 100.0);
+	self->callback->emit();
 }
 
 void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self) {
@@ -151,8 +151,8 @@ void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
 							 self);
 }
 
-sysvol_wireplumber::sysvol_wireplumber(sysvol* win) {
-	this->win = win;
+sysvol_wireplumber::sysvol_wireplumber(Glib::Dispatcher* callback) {
+	this->callback = callback;
 	wp_init(WP_INIT_PIPEWIRE);
 	core = wp_core_new(NULL, NULL, NULL);
 	apis = g_ptr_array_new_with_free_func(g_object_unref);
