@@ -142,20 +142,23 @@ void sysvol::on_change() {
 	if (icon_size == 0)
 		return;
 
-	// Check if we're muted
-	if (muted) {
-		image_volume.set_from_icon_name("audio-volume-muted-blocking-symbolic");
-		return;
-	}
 
-	if (volume >= 75)
-		image_volume.set_from_icon_name("audio-volume-high-symbolic");
+	get_style_context()->remove_class(volume_class);
+	if (muted)
+		volume_class = "muted-blocking";
+	else if (volume > 100)
+		volume_class = "overamplified";
+	else if (volume >= 75)
+		volume_class = "high";
 	else if (volume >= 50)
-		image_volume.set_from_icon_name("audio-volume-medium-symbolic");
+		volume_class = "medium";
 	else if (volume >= 25)
-		image_volume.set_from_icon_name("audio-volume-low-symbolic");
+		volume_class = "low";
 	else if (volume > 0)
-		image_volume.set_from_icon_name("audio-volume-muted-symbolic");
+		volume_class = "muted";
+
+	image_volume.set_from_icon_name("audio-volume-" + volume_class + "-symbolic");
+	get_style_context()->add_class(volume_class);
 }
 
 void sysvol::on_callback() {
