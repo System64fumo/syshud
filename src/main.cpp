@@ -40,9 +40,13 @@ int main(int argc, char* argv[]) {
 	#ifdef RUNTIME_CONFIG
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:dW:dH:di:dPm:dt:dT:dvh")) {
+		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:dvh")) {
 			case 'p':
-				position = std::stoi(optarg);
+				position = optarg;
+				continue;
+
+			case 'o':
+				orientation = optarg[0];
 				continue;
 
 			case 'W':
@@ -62,7 +66,7 @@ int main(int argc, char* argv[]) {
 				continue;
 
 			case 'm':
-				margin = std::stoi(optarg);
+				margins = optarg;
 				continue;
 
 			case 't':
@@ -84,6 +88,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  sysvol [argument...]:\n" << std::endl;
 				std::cout << "arguments:" << std::endl;
 				std::cout << "  -p	Set position" << std::endl;
+				std::cout << "  -o	Set orientation" << std::endl;
 				std::cout << "  -W	Set window width" << std::endl;
 				std::cout << "  -H	Set window Height" << std::endl;
 				std::cout << "  -i	Set icon size" << std::endl;

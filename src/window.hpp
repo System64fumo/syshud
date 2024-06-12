@@ -29,6 +29,7 @@ class sysvol : public Gtk::Window {
 
 		Gtk::Scale scale_volume;
 		Gtk::Revealer revealer_box;
+		Gtk::RevealerTransitionType transition_type;
 		Glib::Dispatcher dispatcher_callback;
 		void on_callback();
 		bool hide_box();

@@ -5,6 +5,7 @@
 #include <gtk4-layer-shell.h>
 #include <gtkmm/cssprovider.h>
 #include <filesystem>
+#include <iostream>
 
 bool timer_ticking = false;
 bool first_run = false;
@@ -15,60 +16,111 @@ sysvol::sysvol() {
 	gtk_layer_set_namespace(gobj(), "sysvol");
 	gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
 
-	GtkLayerShellEdge edge = GTK_LAYER_SHELL_EDGE_BOTTOM;
-	switch (position) {
-		case 0:
-			edge = GTK_LAYER_SHELL_EDGE_TOP;
-			scale_volume.set_value_pos(Gtk::PositionType::RIGHT);
-			break;
-		case 1:
-			edge = GTK_LAYER_SHELL_EDGE_RIGHT;
-			scale_volume.set_value_pos(Gtk::PositionType::BOTTOM);
-			break;
-		case 2:
-			edge = GTK_LAYER_SHELL_EDGE_BOTTOM;
-			scale_volume.set_value_pos(Gtk::PositionType::RIGHT);
-			break;
-		case 3:
-			edge = GTK_LAYER_SHELL_EDGE_LEFT;
-			scale_volume.set_value_pos(Gtk::PositionType::BOTTOM);
-			break;
+	bool edge_top = (position.find("top") != std::string::npos);
+	bool edge_right = (position.find("right") != std::string::npos);
+	bool edge_bottom = (position.find("bottom") != std::string::npos);
+	bool edge_left = (position.find("left") != std::string::npos);
 
+	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_TOP, edge_top);
+	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, edge_right);
+	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, edge_bottom);
+	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, edge_left);
+
+	if ((edge_top && edge_bottom) || (edge_right && edge_left)) {
+		std::cerr << "Verry funny arguments you got there" << std::endl;
+		std::cerr << "Would be a shame if.. The program crashed right?" << std::endl;
+		app->quit();
 	}
-	gtk_layer_set_anchor(gobj(), edge, true);
-
-	// Set layout
-	if (position % 2) {
-		// Vertical layout
-		get_style_context()->add_class("vertical");
-		scale_volume.set_orientation(Gtk::Orientation::VERTICAL);
-		box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-
-		set_default_size(height, width);
-		if (show_percentage)
-			box_layout.append(label_volume);
-		box_layout.append(scale_volume);
-		if (icon_size != 0)
-			box_layout.append(image_volume);
-		scale_volume.set_vexpand(true);
-		scale_volume.set_inverted(true);
-	}
-	else {
-		// Horizontal layout
-		get_style_context()->add_class("horizontal");
-		set_default_size(width, height);
-		if (icon_size != 0)
-			box_layout.append(image_volume);
-		box_layout.append(scale_volume);
-		if (show_percentage)
-			box_layout.append(label_volume);
-		scale_volume.set_hexpand(true);
+	else if (!edge_top && !edge_right && !edge_bottom && !edge_left) {
+		std::cerr << "You sure you specified valid arguments?" << std::endl;
+		std::cerr << "Valid arguments: \"top right bottom left\"" << std::endl;
+		app->quit();
 	}
 
 	// Initialize
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
-	box_layout.set_margin(margin);
+
+	// Set layout
+	if (orientation == 'h') {
+		// Horizontal layout
+		get_style_context()->add_class("horizontal");
+		set_default_size(width, height);
+
+		// Check to see if the icon should be shown
+		if (icon_size != 0)
+			box_layout.append(image_volume);
+
+		box_layout.append(scale_volume);
+
+		// Check to see if the percentage should be shown
+		if (show_percentage)
+			box_layout.append(label_volume);
+
+		scale_volume.set_hexpand(true);
+		scale_volume.set_value_pos(Gtk::PositionType::RIGHT);
+
+		// Revealer shenanigans
+		if (edge_top) {
+			transition_type = Gtk::RevealerTransitionType::SLIDE_DOWN;
+			revealer_box.set_valign(Gtk::Align::START);
+		}
+		else if (edge_bottom) {
+			transition_type = Gtk::RevealerTransitionType::SLIDE_UP;
+			revealer_box.set_valign(Gtk::Align::END);
+		}
+	}
+	else if (orientation == 'v') {
+		// Vertical layout
+		get_style_context()->add_class("vertical");
+		scale_volume.set_orientation(Gtk::Orientation::VERTICAL);
+		box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
+		set_default_size(height, width);
+
+		// Check to see if the percentage should be shown
+		if (show_percentage)
+			box_layout.append(label_volume);
+
+		box_layout.append(scale_volume);
+
+		// Check to see if the icon should be shown
+		if (icon_size != 0)
+			box_layout.append(image_volume);
+
+		scale_volume.set_vexpand(true);
+		scale_volume.set_inverted(true);
+		scale_volume.set_value_pos(Gtk::PositionType::BOTTOM);
+
+		// Revealer shenanigans
+		if (edge_right) {
+			transition_type = Gtk::RevealerTransitionType::SLIDE_LEFT;
+			revealer_box.set_halign(Gtk::Align::END);
+		}
+		else if (edge_left) {
+			transition_type = Gtk::RevealerTransitionType::SLIDE_RIGHT;
+			revealer_box.set_halign(Gtk::Align::START);
+		}
+	}
+	else {
+		std::cerr << "Unknown orientation: " << orientation << std::endl;
+		return;
+	}
+
+	// Set margins
+	std::istringstream iss(margins);
+	std::string margin;
+	int count = 0;
+	while (std::getline(iss, margin, ' ')) {
+		if (count == 0)
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_TOP, std::stoi(margin));
+		else if (count == 1)
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, std::stoi(margin));
+		else if  (count == 2)
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, std::stoi(margin));
+		else if (count == 3)
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, std::stoi(margin));
+		count++;
+	}
 
 	// Animations disabled
 	if (transition_time == 0)
@@ -78,31 +130,11 @@ sysvol::sysvol() {
 	else {
 		set_child(revealer_box);
 		revealer_box.set_child(box_layout);
-
-		Gtk::RevealerTransitionType transition_type = Gtk::RevealerTransitionType::SLIDE_UP;
-		switch (position) {
-			case 0:
-				revealer_box.set_valign(Gtk::Align::START);
-				transition_type = Gtk::RevealerTransitionType::SLIDE_DOWN;
-				break;
-			case 1:
-				revealer_box.set_halign(Gtk::Align::END);
-				transition_type = Gtk::RevealerTransitionType::SLIDE_LEFT;
-				break;
-			case 2:
-				revealer_box.set_valign(Gtk::Align::END);
-				transition_type = Gtk::RevealerTransitionType::SLIDE_UP;
-				break;
-			case 3:
-				revealer_box.set_halign(Gtk::Align::START);
-				transition_type = Gtk::RevealerTransitionType::SLIDE_RIGHT;
-				break;
-		}
-
 		revealer_box.set_transition_type(transition_type);
 		revealer_box.set_transition_duration(transition_time);
 		revealer_box.set_reveal_child(false);
 	}
+
 	scale_volume.set_range(0, 100);
 	scale_volume.set_increments(5, 10);
 
