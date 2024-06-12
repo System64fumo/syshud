@@ -1,8 +1,6 @@
 #include "wireplumber.hpp"
-#include <cstdint>
 #include <iostream>
 #include <cmath>
-#include <wp/wp.h>
 
 // Internal states
 bool previous_mute;
