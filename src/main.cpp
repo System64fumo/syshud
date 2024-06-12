@@ -3,11 +3,8 @@
 #include "config.hpp"
 #include "git_info.hpp"
 
-#include <unistd.h>
 #include <iostream>
 #include <thread>
-#include <string>
-#include <stdio.h>
 #include <signal.h>
 
 std::thread thread_audio;

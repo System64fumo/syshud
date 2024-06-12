@@ -1,6 +1,5 @@
 #pragma once
-#include <glibmm.h>
-#include <cstdint>
+#include <glibmm/dispatcher.h>
 #include <wp/wp.h>
 
 class sysvol_wireplumber {

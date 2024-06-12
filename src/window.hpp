@@ -1,5 +1,12 @@
 #pragma once
-#include <gtkmm.h>
+
+#include <glibmm/dispatcher.h>
+#include <gtkmm/window.h>
+#include <gtkmm/scale.h>
+#include <gtkmm/revealer.h>
+#include <gtkmm/box.h>
+#include <gtkmm/label.h>
+#include <gtkmm/image.h>
 
 #ifdef PULSEAUDIO
 #include "pulse.hpp"
