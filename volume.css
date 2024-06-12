@@ -2,7 +2,7 @@ window {
 	background: transparent;
 }
 
-revealer > * {
+.box_layout {
 	background: @theme_bg_color;
 	border-radius: 25px;
 	border: 1px solid @borders;
