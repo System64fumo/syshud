@@ -6,6 +6,7 @@ window {
 	background: @theme_bg_color;
 	border-radius: 25px;
 	border: 1px solid @borders;
+	margin: 10px;
 }
 
 scale {
@@ -14,20 +15,6 @@ scale {
 }
 label {
 	color: alpha(@theme_fg_color, 0.5);
-}
-
-/* Volume states */
-.overamplified {
-}
-.high {
-}
-.medium {
-}
-.low {
-}
-.muted {
-}
-.muted-blocking {
 }
 
 /* Horizontal layout */
@@ -78,4 +65,18 @@ scale.vertical slider {
 	min-width: 5px;
 	box-shadow: none;
 	padding: 0px;
+}
+
+/* Volume states */
+.overamplified {
+}
+.high {
+}
+.medium {
+}
+.low {
+}
+.muted {
+}
+.muted-blocking {
 }

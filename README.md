@@ -8,15 +8,16 @@ sysvol can be configured in 2 ways<br>
 2: Using launch arguments<br>
 ```
 arguments:
-  -p	Set position (0 = top | 1 = right | 2 = bottom | 3 = left)
+  -p	Set position (eg: top, top-left, bottom, right)
+  -o	Set orientation (eg: v, h)
   -W	Set window width
   -H	Set window Height
   -i	Set icon size
   -P	Hide percentage
-  -m	Set margins
+  -m	Set margins ("top right bottom left")
   -t	Set timeout
-  -v	Prints version info
   -T	Set transition time (0 disables animations)
+  -v	Prints version info
 ```
 
 Pulseaudio support can be enabled instead of wireplumber by compiling using:<br>
