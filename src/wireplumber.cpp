@@ -9,7 +9,9 @@ double previous_volume;
 bool previous_input_mute;
 double previous_input_volume;
 
-bool sysvol_wireplumber::isValidNodeId(uint32_t id) { return id > 0 && id < G_MAXUINT32; }
+bool sysvol_wireplumber::isValidNodeId(uint32_t id) {
+	return id > 0 && id < G_MAXUINT32;
+}
 
 // I'm sure there's a simpler way to do all of this
 void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
@@ -58,30 +60,38 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	self->callback->emit();
 }
 
-void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self) {
-	// TODO: Clean this up, This is awful.
-	g_autoptr(WpNode) node = static_cast<WpNode*>(wp_object_manager_lookup(
-				self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
-				"=u", self->node_id, nullptr));
-	updateVolume(self->input_node_id, self);
-	updateVolume(self->node_id, self);
+void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self, uint32_t id) {
+	updateVolume(id, self);
 }
 
 void sysvol_wireplumber::onDefaultNodesApiChanged(sysvol_wireplumber* self) {
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
 	if (!isValidNodeId(self->node_id)) {
-		std::cerr << "Invalid node ID Ignoring volume update." << std::endl;
+		std::cerr << "Invalid output node ID Ignoring volume update." << std::endl;
+		return;
+	}
+	if (!isValidNodeId(self->input_node_id)) {
+		std::cerr << "Invalid input node ID Ignoring volume update." << std::endl;
 		return;
 	}
 
-	g_autoptr(WpNode) node = static_cast<WpNode*>(
+	g_autoptr(WpNode) output_node = static_cast<WpNode*>(
 	wp_object_manager_lookup(self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY,
 							 "bound-id", "=u", self->node_id, nullptr));
 
-	self->node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(node), "node.name");
-	std::cout << "Audio output device changed"<< std::endl;
-	std::cout << "Device: " << self->node_name << std::endl;
-	std::cout << "Node ID: " << self->node_id << std::endl;
+	g_autoptr(WpNode) input_node = static_cast<WpNode*>(
+	wp_object_manager_lookup(self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY,
+							 "bound-id", "=u", self->input_node_id, nullptr));
+
+	const gchar* output_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+	const gchar* input_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+
+	std::cout << "Audio device changed"<< std::endl;
+	std::cout << "Output: " << output_node_name << std::endl;
+	std::cout << "Output ID: " << self->node_id << std::endl;
+	std::cout << "Output: " << input_node_name << std::endl;
+	std::cout << "Output ID: " << self->input_node_id << std::endl;
 }
 
 void sysvol_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self) {

@@ -30,7 +30,7 @@ class sysvol_wireplumber {
 		void activatePlugins();
 		static bool isValidNodeId(uint32_t id);
 		static void updateVolume(uint32_t id, sysvol_wireplumber* self);
-		static void onMixerChanged(sysvol_wireplumber* self);
+		static void onMixerChanged(sysvol_wireplumber* self, uint32_t id);
 		static void onDefaultNodesApiChanged(sysvol_wireplumber* self);
 		static void onPluginActivated(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self);
 		static void onMixerApiLoaded(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self);
