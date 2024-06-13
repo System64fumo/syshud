@@ -1,5 +1,5 @@
 EXEC = sysvol
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 
+PKGS = gtkmm-4.0 gtk4-layer-shell-0
 SRCS +=	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
