@@ -174,29 +174,47 @@ void sysvol::on_change() {
 	if (icon_size == 0)
 		return;
 
+	get_style_context()->remove_class(output_class);
 
-	get_style_context()->remove_class(volume_class);
-	if (muted)
-		volume_class = "muted-blocking";
-	else if (volume > 100)
-		volume_class = "overamplified";
-	else if (volume >= 75)
-		volume_class = "high";
-	else if (volume >= 50)
-		volume_class = "medium";
-	else if (volume >= 25)
-		volume_class = "low";
-	else if (volume > 0)
-		volume_class = "muted";
+	// TODO: Replace this with a map
+	if (muted) {
+		output_class = "muted-blocking";
+		input_class = "muted";
+	}
+	else if (volume > 100) {
+		output_class = "overamplified";
+		input_class = "high";
+	}
+	else if (volume >= 75) {
+		output_class = "high";
+		input_class = "high";
+	}
+	else if (volume >= 50) {
+		output_class = "medium";
+		input_class = "medium";
+	}
+	else if (volume >= 25) {
+		output_class = "low";
+		input_class = "medium";
+	}
+	else if (volume > 0) {
+		output_class = "muted";
+		input_class = "low";
+	}
 
-	image_volume.set_from_icon_name("audio-volume-" + volume_class + "-symbolic");
-	get_style_context()->add_class(volume_class);
+	get_style_context()->add_class(output_class);
+
+	if (!input)
+		image_volume.set_from_icon_name("audio-volume-" + output_class + "-symbolic");
+	else
+		image_volume.set_from_icon_name("audio-input-microphone-" + input_class + "-symbolic");
 }
 
 void sysvol::on_callback() {
 	#ifndef PULSEAUDIO
 	volume = sysvol_wp->volume;
 	muted = sysvol_wp->muted;
+	input = sysvol_wp->input;
 	#endif
 
 	on_change();

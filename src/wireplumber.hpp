@@ -8,7 +8,7 @@ class sysvol_wireplumber {
 		bool muted;
 		int input_volume;
 		bool input_muted;
-
+		bool input;
 
 		sysvol_wireplumber(Glib::Dispatcher* callback);
 		virtual ~sysvol_wireplumber();

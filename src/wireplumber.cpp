@@ -52,6 +52,8 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	}
 
 	// Set values and trigger a callback
+	self->muted = temp_muted;
+	self->input = (id == self->input_node_id);
 	self->volume = round(temp_volume * 100.0);
 	self->callback->emit();
 }
