@@ -6,11 +6,14 @@
 bool previous_mute;
 double previous_volume;
 
+bool previous_input_mute;
+double previous_input_volume;
+
 bool sysvol_wireplumber::isValidNodeId(uint32_t id) { return id > 0 && id < G_MAXUINT32; }
 
+// I'm sure there's a simpler way to do all of this
 void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	GVariant* variant = nullptr;
-
 	if (!isValidNodeId(id)) {
 		std::cerr << "Invalid node ID: " << id << std::endl;
 		std::cerr << "Ignoring volume update." << std::endl;
@@ -18,23 +21,35 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 	}
 
 	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
+	double temp_volume;
+	bool temp_muted;
+	g_variant_lookup(variant, "volume", "d", &temp_volume);
+	g_variant_lookup(variant, "mute", "b", &temp_muted);
+	// There is supposed to be a freeup thing here,
+	// Too bad it segfaults!
+
 	if (variant == nullptr) {
 		std::cerr << "Node does not support volume\n" << std::endl;
 		return;
 	}
 
-	double temp_volume;
-	g_variant_lookup(variant, "volume", "d", &temp_volume);
-	g_variant_lookup(variant, "mute", "b", &self->muted);
-	// There is supposed to be a freeup thing here,
-	// Too bad it segfaults!
+	if (id == self->node_id) {
+		// Ignore changes if the values are the same
+		if (previous_volume == temp_volume && previous_mute == temp_muted)
+			return;
 
-	// Ignore changes if the values are the same
-	if (previous_volume == temp_volume && previous_mute == self->muted)
-		return;
+		previous_volume = temp_volume;
+		previous_mute = temp_muted;
+	}
 
-	previous_volume = temp_volume;
-	previous_mute = self->muted;
+	else if (id == self->input_node_id) {
+		// Ignore changes if the values are the same
+		if (previous_input_volume == temp_volume && previous_input_mute == temp_muted)
+			return;
+
+		previous_input_volume = temp_volume;
+		previous_input_mute = temp_muted;
+	}
 
 	// Set values and trigger a callback
 	self->volume = round(temp_volume * 100.0);
@@ -42,9 +57,11 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 }
 
 void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self) {
+	// TODO: Clean this up, This is awful.
 	g_autoptr(WpNode) node = static_cast<WpNode*>(wp_object_manager_lookup(
 				self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
 				"=u", self->node_id, nullptr));
+	updateVolume(self->input_node_id, self);
 	updateVolume(self->node_id, self);
 }
 
@@ -141,6 +158,7 @@ void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
 	}
 
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
 
 	updateVolume(self->node_id, self);
 
@@ -158,6 +176,8 @@ sysvol_wireplumber::sysvol_wireplumber(Glib::Dispatcher* callback) {
 
 	wp_object_manager_add_interest(om, WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
 								   "media.class", "=s", "Audio/Sink", nullptr);
+	wp_object_manager_add_interest(om, WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
+								   "media.class", "=s", "Audio/Source", nullptr);
 
 	if (wp_core_connect(core) == 0) {
 		std::cout << "Could not connect" << std::endl;

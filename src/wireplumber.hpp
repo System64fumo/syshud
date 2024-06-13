@@ -6,6 +6,9 @@ class sysvol_wireplumber {
 	public:
 		int volume;
 		bool muted;
+		int input_volume;
+		bool input_muted;
+
 
 		sysvol_wireplumber(Glib::Dispatcher* callback);
 		virtual ~sysvol_wireplumber();
@@ -19,6 +22,7 @@ class sysvol_wireplumber {
 		int pending_plugins;
 
 		uint32_t node_id = 0;
+		uint32_t input_node_id = 0;
 		const gchar* node_name;
 		WpPlugin *mixer_api;
 		WpPlugin *def_nodes_api;
