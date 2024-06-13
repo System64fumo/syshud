@@ -19,7 +19,7 @@ class sysvol : public Gtk::Window {
 	public:
 		int volume;
 		bool muted;
-		std::string volume_class;
+		bool input;
 
 		#ifdef PULSEAUDIO
 		PulseAudio pa;
@@ -36,6 +36,9 @@ class sysvol : public Gtk::Window {
 		sysvol();
 
 	private:
+		std::string output_class;
+		std::string input_class;
+
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;
 		Gtk::Label label_volume;
