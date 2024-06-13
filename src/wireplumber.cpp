@@ -2,19 +2,11 @@
 #include <iostream>
 #include <cmath>
 
-// Internal states
-bool previous_mute;
-double previous_volume;
-
-bool previous_input_mute;
-double previous_input_volume;
-
 bool sysvol_wireplumber::isValidNodeId(uint32_t id) {
 	return id > 0 && id < G_MAXUINT32;
 }
 
-// I'm sure there's a simpler way to do all of this
-void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
+void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self, uint32_t id) {
 	GVariant* variant = nullptr;
 	if (!isValidNodeId(id)) {
 		std::cerr << "Invalid node ID: " << id << std::endl;
@@ -22,11 +14,17 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 		return;
 	}
 
+	g_autoptr(WpNode) node = static_cast<WpNode*>(wp_object_manager_lookup(
+				self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
+				"=u", id, nullptr));
+
+	if (node == nullptr)
+		return;
+
 	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
 	double temp_volume;
-	bool temp_muted;
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
-	g_variant_lookup(variant, "mute", "b", &temp_muted);
+	g_variant_lookup(variant, "mute", "b", &self->muted);
 	// There is supposed to be a freeup thing here,
 	// Too bad it segfaults!
 
@@ -35,33 +33,15 @@ void sysvol_wireplumber::updateVolume(uint32_t id, sysvol_wireplumber* self) {
 		return;
 	}
 
-	if (id == self->node_id) {
-		// Ignore changes if the values are the same
-		if (previous_volume == temp_volume && previous_mute == temp_muted)
-			return;
-
-		previous_volume = temp_volume;
-		previous_mute = temp_muted;
-	}
-
-	else if (id == self->input_node_id) {
-		// Ignore changes if the values are the same
-		if (previous_input_volume == temp_volume && previous_input_mute == temp_muted)
-			return;
-
-		previous_input_volume = temp_volume;
-		previous_input_mute = temp_muted;
-	}
+	// Figure out if the change came from an input or output device
+	const std::string media_class = std::string(
+						wp_pipewire_object_get_property(
+							WP_PIPEWIRE_OBJECT(node), "media.class"));
 
 	// Set values and trigger a callback
-	self->muted = temp_muted;
-	self->input = (id == self->input_node_id);
+	self->input = (media_class == "Audio/Source");
 	self->volume = round(temp_volume * 100.0);
 	self->callback->emit();
-}
-
-void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self, uint32_t id) {
-	updateVolume(id, self);
 }
 
 void sysvol_wireplumber::onDefaultNodesApiChanged(sysvol_wireplumber* self) {
@@ -172,7 +152,7 @@ void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
 
-	updateVolume(self->node_id, self);
+	onMixerChanged(self, self->node_id);
 
 	g_signal_connect_swapped(self->mixer_api, "changed", (GCallback)onMixerChanged, self);
 	g_signal_connect_swapped(self->def_nodes_api, "changed", (GCallback)onDefaultNodesApiChanged,
