@@ -6,8 +6,6 @@ class sysvol_wireplumber {
 	public:
 		int volume;
 		bool muted;
-		int input_volume;
-		bool input_muted;
 		bool input;
 
 		sysvol_wireplumber(Glib::Dispatcher* callback);
@@ -29,7 +27,6 @@ class sysvol_wireplumber {
 
 		void activatePlugins();
 		static bool isValidNodeId(uint32_t id);
-		static void updateVolume(uint32_t id, sysvol_wireplumber* self);
 		static void onMixerChanged(sysvol_wireplumber* self, uint32_t id);
 		static void onDefaultNodesApiChanged(sysvol_wireplumber* self);
 		static void onPluginActivated(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self);
