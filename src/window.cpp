@@ -258,6 +258,7 @@ void sysvol::on_audio_callback() {
 }
 
 void sysvol::on_backlight_callback() {
+	brightness = backlight->get_brightness();
 	on_change(true);
 	scale_volume.set_value(brightness);
 
