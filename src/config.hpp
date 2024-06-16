@@ -16,3 +16,4 @@ inline bool show_percentage = true;		// true
 inline std::string margins = "0 0 0 0";	// 0 0 0 0
 inline int desired_timeout = 3;			// 3
 inline int transition_time = 250;		// 250
+inline std::string backlight_path = "";	// ""
