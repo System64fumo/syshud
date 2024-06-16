@@ -17,6 +17,7 @@ arguments:
   -m	Set margins ("top right bottom left")
   -t	Set timeout
   -T	Set transition time (0 disables animations)
+  -b	Set custom backlight path ("-" to disable backlight monitoring)
   -v	Prints version info
 ```
 

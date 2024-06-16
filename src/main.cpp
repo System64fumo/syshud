@@ -34,14 +34,15 @@ void audio_server() {
 #else
 	win->sysvol_wp = new sysvol_wireplumber(&win->dispatcher_audio);
 #endif
-	win->backlight = new sysvol_backlight(&win->dispatcher_backlight);
+	if (backlight_path != "-")
+		win->backlight = new sysvol_backlight(&win->dispatcher_backlight, backlight_path);
 }
 
 int main(int argc, char* argv[]) {
 	#ifdef RUNTIME_CONFIG
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:dvh")) {
+		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dvh")) {
 			case 'p':
 				position = optarg;
 				continue;
@@ -78,6 +79,10 @@ int main(int argc, char* argv[]) {
 				transition_time = std::stoi(optarg);
 				continue;
 
+			case 'b':
+				backlight_path = optarg;
+				continue;
+
 			case 'v':
 				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
 				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
@@ -97,6 +102,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -m	Set margins" << std::endl;
 				std::cout << "  -t	Set timeout" << std::endl;
 				std::cout << "  -T	Set transition time" << std::endl;
+				std::cout << "  -b	Set custom backlight path" << std::endl;
 				std::cout << "  -v	Prints version info" << std::endl;
 				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;

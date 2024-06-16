@@ -7,16 +7,23 @@
 #include <sys/inotify.h>
 #include <glibmm/dispatcher.h>
 
-void sysvol_backlight::get_backlight_path() {
-	std::string path = "/sys/class/backlight/";
-	for (const auto& entry : std::filesystem::directory_iterator(path)) {
-		if (std::filesystem::is_directory(entry.path())) {
-			backlight_path = entry.path();
-			std::cout << "Backlight: " << backlight_path << std::endl;
-			return;
-		}
+void sysvol_backlight::get_backlight_path(std::string custom_backlight_path) {
+	if (custom_backlight_path != "") {
+		backlight_path = custom_backlight_path;
+		std::cout << "Backlight: " << backlight_path << std::endl;
+		return;
 	}
-	std::cout << "Unable to automatically detect your backlight" << std::endl;
+	else {
+		std::string path = "/sys/class/backlight/";
+		for (const auto& entry : std::filesystem::directory_iterator(path)) {
+			if (std::filesystem::is_directory(entry.path())) {
+				backlight_path = entry.path();
+				std::cout << "Backlight: " << backlight_path << std::endl;
+				return;
+			}
+		}
+		std::cout << "Unable to automatically detect your backlight" << std::endl;
+	}
 }
 
 int sysvol_backlight::get_brightness() {
@@ -30,8 +37,8 @@ int sysvol_backlight::get_brightness() {
 	return (brightness / max_brightness) * 100;
 }
 
-sysvol_backlight::sysvol_backlight(Glib::Dispatcher* callback) {
-	get_backlight_path();
+sysvol_backlight::sysvol_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
+	get_backlight_path(custom_backlight_path);
 
 	inotify_fd = inotify_init();
 	inotify_add_watch(inotify_fd, backlight_path.c_str(), IN_MODIFY);
