@@ -1,11 +1,10 @@
 #include "backlight.hpp"
-#include "main.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <sys/inotify.h>
-#include <glibmm/dispatcher.h>
+#include <thread>
 
 void sysvol_backlight::get_backlight_path(std::string custom_backlight_path) {
 	if (custom_backlight_path != "") {
@@ -27,6 +26,7 @@ void sysvol_backlight::get_backlight_path(std::string custom_backlight_path) {
 }
 
 int sysvol_backlight::get_brightness() {
+	std::lock_guard<std::mutex> lock(brightness_mutex);
 	std::ifstream brightness_file(backlight_path + "/brightness");
 	std::ifstream max_brightness_file(backlight_path + "/max_brightness");
 	double brightness;
@@ -40,27 +40,24 @@ int sysvol_backlight::get_brightness() {
 sysvol_backlight::sysvol_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
 	get_backlight_path(custom_backlight_path);
 
-	inotify_fd = inotify_init();
-	inotify_add_watch(inotify_fd, backlight_path.c_str(), IN_MODIFY);
+	std::thread monitor_thread([&, callback]() {
+		int inotify_fd = inotify_init();
+		inotify_add_watch(inotify_fd, backlight_path.c_str(), IN_MODIFY);
 
-	const size_t buffer_len = 1024;
-	char buffer[buffer_len];
-	int last_brightness = get_brightness();
+		int last_brightness = get_brightness();
+		char buffer[1024];
 
-	// TODO: Literally rewrite all of this mess.
-	// This is terrible.
-	// Also consider not blocking the constructor.
-	while (true) {
-		read(inotify_fd, buffer, buffer_len);
+		while (true) {
+			read(inotify_fd, buffer, 1024);
 
-		int brightness = get_brightness();
-		if (brightness != last_brightness) {
-			last_brightness = brightness;
-			win->brightness = brightness;
-			callback->emit();
+			int brightness = get_brightness();
+			if (brightness != last_brightness) {
+				last_brightness = brightness;
+				callback->emit();
+			}
 		}
-	}
-
+	});
+	monitor_thread.detach();
 }
 
 sysvol_backlight::~sysvol_backlight() {
