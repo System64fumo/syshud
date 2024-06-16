@@ -149,9 +149,9 @@ sysvol::sysvol() {
 	if (show_percentage)
 		label_volume.set_size_request(height, height);
 
-	on_change();
-	scale_volume.signal_value_changed().connect(sigc::mem_fun(*this, &sysvol::on_change));
-	dispatcher_callback.connect(sigc::mem_fun(*this, &sysvol::on_callback));
+	on_change(false);
+	dispatcher_audio.connect(sigc::mem_fun(*this, &sysvol::on_audio_callback));
+	dispatcher_backlight.connect(sigc::mem_fun(*this, &sysvol::on_backlight_callback));
 
 	// Load custom css
 	std::string home_dir = getenv("HOME");
@@ -165,60 +165,102 @@ sysvol::sysvol() {
 	style_context->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
-void sysvol::on_change() {
-	// Check if we should draw the percentage
-	if (show_percentage)
-		label_volume.set_label(std::to_string(volume) + "\%");
+void sysvol::on_change(bool reason_backlight) {
+	int value;
 
 	// Check if we should draw the icons or not
 	if (icon_size == 0)
 		return;
 
-	get_style_context()->remove_class(output_class);
+	if (reason_backlight) {
+		value = brightness;
+		if (brightness > 75) {
+			image_volume.set_from_icon_name("display-brightness-high-symbolic");
+		}
+		else if (brightness >= 50) {
+			image_volume.set_from_icon_name("display-brightness-medium-symbolic");
+		}
+		else if (brightness >= 25) {
+			image_volume.set_from_icon_name("display-brightness-low-symbolic");
+		}
+		else if (brightness >= 0) {
+			image_volume.set_from_icon_name("display-brightness-off-symbolic");
+		}
+	}
+	else {
+		value = volume;
+		get_style_context()->remove_class(output_class);
 
-	// TODO: Replace this with a map
-	if (muted) {
-		output_class = "muted-blocking";
-		input_class = "muted";
-	}
-	else if (volume > 100) {
-		output_class = "overamplified";
-		input_class = "high";
-	}
-	else if (volume >= 75) {
-		output_class = "high";
-		input_class = "high";
-	}
-	else if (volume >= 50) {
-		output_class = "medium";
-		input_class = "medium";
-	}
-	else if (volume >= 25) {
-		output_class = "low";
-		input_class = "medium";
-	}
-	else if (volume > 0) {
-		output_class = "muted";
-		input_class = "low";
+		// TODO: Replace this with a map
+		if (muted) {
+			output_class = "muted-blocking";
+			input_class = "muted";
+		}
+		else if (volume > 100) {
+			output_class = "overamplified";
+			input_class = "high";
+		}
+		else if (volume >= 75) {
+			output_class = "high";
+			input_class = "high";
+		}
+		else if (volume >= 50) {
+			output_class = "medium";
+			input_class = "medium";
+		}
+		else if (volume >= 25) {
+			output_class = "low";
+			input_class = "medium";
+		}
+		else if (volume > 0) {
+			output_class = "muted";
+			input_class = "low";
+		}
+
+		get_style_context()->add_class(output_class);
+
+		if (!input)
+			image_volume.set_from_icon_name("audio-volume-" + output_class + "-symbolic");
+		else
+			image_volume.set_from_icon_name("audio-input-microphone-" + input_class + "-symbolic");
 	}
 
-	get_style_context()->add_class(output_class);
+	// Check if we should draw the percentage
+	if (show_percentage)
+		label_volume.set_label(std::to_string(value) + "\%");
 
-	if (!input)
-		image_volume.set_from_icon_name("audio-volume-" + output_class + "-symbolic");
-	else
-		image_volume.set_from_icon_name("audio-input-microphone-" + input_class + "-symbolic");
+
 }
 
-void sysvol::on_callback() {
+void sysvol::on_audio_callback() {
 	#ifndef PULSEAUDIO
 	volume = sysvol_wp->volume;
 	muted = sysvol_wp->muted;
 	input = sysvol_wp->input;
 	#endif
 
-	on_change();
+	on_change(false);
 	scale_volume.set_value(volume);
+	if (timer_ticking)
+		timeout = desired_timeout;
+		
+	else if (timeout == 1) {
+		if (!first_run) {
+			first_run = true;
+			return;
+		}
+		win->show();
+		revealer_box.set_reveal_child(true);
+		timer_ticking = true;
+		timeout = desired_timeout;
+		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
+	}
+}
+
+void sysvol::on_backlight_callback() {
+	on_change(true);
+	scale_volume.set_value(brightness);
+
 	if (timer_ticking)
 		timeout = desired_timeout;
 		

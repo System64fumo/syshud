@@ -32,8 +32,9 @@ void audio_server() {
 	if (pa.initialize() != 0)
 		quit(0);
 #else
-	win->sysvol_wp = new sysvol_wireplumber(&win->dispatcher_callback);
+	win->sysvol_wp = new sysvol_wireplumber(&win->dispatcher_audio);
 #endif
+	win->backlight = new sysvol_backlight(&win->dispatcher_backlight);
 }
 
 int main(int argc, char* argv[]) {
