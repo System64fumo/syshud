@@ -14,24 +14,30 @@
 #include "wireplumber.hpp"
 #endif
 
+#include "backlight.hpp"
+
 class sysvol : public Gtk::Window {
 
 	public:
 		int volume;
 		bool muted;
 		bool input;
+		int brightness;
 
 		#ifdef PULSEAUDIO
 		PulseAudio pa;
 		#else
 		sysvol_wireplumber *sysvol_wp;
 		#endif
+		sysvol_backlight *backlight;
 
 		Gtk::Scale scale_volume;
 		Gtk::Revealer revealer_box;
 		Gtk::RevealerTransitionType transition_type;
-		Glib::Dispatcher dispatcher_callback;
-		void on_callback();
+		Glib::Dispatcher dispatcher_audio;
+		Glib::Dispatcher dispatcher_backlight;
+		void on_audio_callback();
+		void on_backlight_callback();
 		bool hide_box();
 		sysvol();
 
@@ -44,6 +50,6 @@ class sysvol : public Gtk::Window {
 		Gtk::Label label_volume;
 
 		void InitLayout();
-		void on_change();
+		void on_change(bool reason_backlight);
 		static bool timer();
 };
