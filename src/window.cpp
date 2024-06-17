@@ -8,7 +8,6 @@
 #include <iostream>
 
 bool timer_ticking = false;
-bool first_run = false;
 
 syshud::syshud() {
 	// Initialize layer shell
@@ -149,7 +148,6 @@ syshud::syshud() {
 	if (show_percentage)
 		label_volume.set_size_request(height, height);
 
-	on_change(false);
 	dispatcher_audio.connect(sigc::mem_fun(*this, &syshud::on_audio_callback));
 	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
 
@@ -166,6 +164,19 @@ syshud::syshud() {
 }
 
 void syshud::on_change(bool reason_backlight) {
+	//
+	if (timer_ticking)
+		timeout = desired_timeout;
+		
+	else if (timeout == 1) {
+		win->show();
+
+		revealer_box.set_reveal_child(true);
+		timer_ticking = true;
+		timeout = desired_timeout;
+		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
+	}
+
 	std::string icon;
 	int value;
 
@@ -230,6 +241,9 @@ void syshud::on_change(bool reason_backlight) {
 	if (!icon.empty())
 		image_volume.set_from_icon_name(icon);
 
+	// Set the appropiate value
+	scale_volume.set_value(value);
+
 	// Check if we should draw the percentage
 	if (show_percentage)
 		label_volume.set_label(std::to_string(value) + "\%");
@@ -242,43 +256,17 @@ void syshud::on_audio_callback() {
 	input = syshud_wp->input;
 	#endif
 
-	on_change(false);
-	scale_volume.set_value(volume);
-	if (timer_ticking)
-		timeout = desired_timeout;
-		
-	else if (timeout == 1) {
-		if (!first_run) {
-			first_run = true;
+	if (!first_run) {
+		first_run = true;
 			return;
-		}
-		win->show();
-		revealer_box.set_reveal_child(true);
-		timer_ticking = true;
-		timeout = desired_timeout;
-		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
 	}
+
+	on_change(false);
 }
 
 void syshud::on_backlight_callback() {
 	brightness = backlight->get_brightness();
 	on_change(true);
-	scale_volume.set_value(brightness);
-
-	if (timer_ticking)
-		timeout = desired_timeout;
-		
-	else if (timeout == 1) {
-		if (!first_run) {
-			first_run = true;
-			return;
-		}
-		win->show();
-		revealer_box.set_reveal_child(true);
-		timer_ticking = true;
-		timeout = desired_timeout;
-		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
-	}
 }
 
 // This is a terrible mess, Dear lord.

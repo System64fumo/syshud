@@ -23,6 +23,7 @@ class syshud : public Gtk::Window {
 		bool muted;
 		bool input;
 		int brightness;
+		bool first_run = false;
 
 		#ifdef PULSEAUDIO
 		PulseAudio pa;
