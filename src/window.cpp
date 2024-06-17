@@ -173,6 +173,11 @@ void syshud::on_change(bool reason_backlight) {
 		{3, "audio-volume-high-symbolic"},
 		{4, "audio-volume-overamplified-symbolic"},
 	};
+	std::map<int, std::string> input_icons = {
+		{0, "audio-input-microphone-low-symbolic"},
+		{1, "audio-input-microphone-medium-symbolic"},
+		{2, "audio-input-microphone-high-symbolic"},
+	};
 
 
 	int value;
@@ -183,6 +188,8 @@ void syshud::on_change(bool reason_backlight) {
 
 	if (reason_backlight) {
 		value = brightness;
+
+		// TODO: Replace this with a map
 		if (brightness > 75) {
 			image_volume.set_from_icon_name("display-brightness-high-symbolic");
 		}
@@ -200,27 +207,11 @@ void syshud::on_change(bool reason_backlight) {
 		value = volume;
 		get_style_context()->remove_class(output_class);
 
-		// TODO: Replace this with a map
 		// TODO: Redo the entire class thing
 		// Temporarily intentionally broken
 		if (muted) {
 			output_class = "muted-blocking";
 			input_class = "muted";
-		}
-		else if (volume > 100) {
-			input_class = "high";
-		}
-		else if (volume >= 75) {
-			input_class = "high";
-		}
-		else if (volume >= 50) {
-			input_class = "medium";
-		}
-		else if (volume >= 25) {
-			input_class = "medium";
-		}
-		else if (volume > 0) {
-			input_class = "low";
 		}
 
 		get_style_context()->add_class(output_class);
@@ -228,7 +219,9 @@ void syshud::on_change(bool reason_backlight) {
 		if (!input)
 			image_volume.set_from_icon_name(output_icons[(volume - 1) / 25]);
 		else
-			image_volume.set_from_icon_name("audio-input-microphone-" + input_class + "-symbolic");
+			// Realize that input levels above 100% will not be rendered now..
+			// TODO: Fix this
+			image_volume.set_from_icon_name(input_icons[volume / 34]);
 	}
 
 	// Check if we should draw the percentage
