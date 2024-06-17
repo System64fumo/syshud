@@ -6,7 +6,7 @@
 #include <sys/inotify.h>
 #include <thread>
 
-void sysvol_backlight::get_backlight_path(std::string custom_backlight_path) {
+void syshud_backlight::get_backlight_path(std::string custom_backlight_path) {
 	if (custom_backlight_path != "") {
 		backlight_path = custom_backlight_path;
 		std::cout << "Backlight: " << backlight_path << std::endl;
@@ -25,7 +25,7 @@ void sysvol_backlight::get_backlight_path(std::string custom_backlight_path) {
 	}
 }
 
-int sysvol_backlight::get_brightness() {
+int syshud_backlight::get_brightness() {
 	std::lock_guard<std::mutex> lock(brightness_mutex);
 	std::ifstream brightness_file(backlight_path + "/brightness");
 	std::ifstream max_brightness_file(backlight_path + "/max_brightness");
@@ -37,7 +37,7 @@ int sysvol_backlight::get_brightness() {
 	return (brightness / max_brightness) * 100;
 }
 
-sysvol_backlight::sysvol_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
+syshud_backlight::syshud_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
 	get_backlight_path(custom_backlight_path);
 
 	std::thread monitor_thread([&, callback]() {
@@ -60,6 +60,6 @@ sysvol_backlight::sysvol_backlight(Glib::Dispatcher* callback, std::string custo
 	monitor_thread.detach();
 }
 
-sysvol_backlight::~sysvol_backlight() {
+syshud_backlight::~syshud_backlight() {
 	close(inotify_fd);
 }

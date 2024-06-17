@@ -2,10 +2,10 @@
 #include <glibmm/dispatcher.h>
 #include <mutex>
 
-class sysvol_backlight {
+class syshud_backlight {
 	public:
-		sysvol_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path);
-		~sysvol_backlight();
+		syshud_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path);
+		~syshud_backlight();
 
 		int get_brightness();
 

@@ -10,10 +10,10 @@
 bool timer_ticking = false;
 bool first_run = false;
 
-sysvol::sysvol() {
+syshud::syshud() {
 	// Initialize layer shell
 	gtk_layer_init_for_window(gobj());
-	gtk_layer_set_namespace(gobj(), "sysvol");
+	gtk_layer_set_namespace(gobj(), "syshud");
 	gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
 
 	bool edge_top = (position.find("top") != std::string::npos);
@@ -150,12 +150,12 @@ sysvol::sysvol() {
 		label_volume.set_size_request(height, height);
 
 	on_change(false);
-	dispatcher_audio.connect(sigc::mem_fun(*this, &sysvol::on_audio_callback));
-	dispatcher_backlight.connect(sigc::mem_fun(*this, &sysvol::on_backlight_callback));
+	dispatcher_audio.connect(sigc::mem_fun(*this, &syshud::on_audio_callback));
+	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
 
 	// Load custom css
 	std::string home_dir = getenv("HOME");
-	std::string css_path = home_dir + "/.config/sys64/volume.css";
+	std::string css_path = home_dir + "/.config/sys64/hud.css";
 
 	if (!std::filesystem::exists(css_path)) return;
 
@@ -165,7 +165,7 @@ sysvol::sysvol() {
 	style_context->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
-void sysvol::on_change(bool reason_backlight) {
+void syshud::on_change(bool reason_backlight) {
 	int value;
 
 	// Check if we should draw the icons or not
@@ -232,11 +232,11 @@ void sysvol::on_change(bool reason_backlight) {
 
 }
 
-void sysvol::on_audio_callback() {
+void syshud::on_audio_callback() {
 	#ifndef PULSEAUDIO
-	volume = sysvol_wp->volume;
-	muted = sysvol_wp->muted;
-	input = sysvol_wp->input;
+	volume = syshud_wp->volume;
+	muted = syshud_wp->muted;
+	input = syshud_wp->input;
 	#endif
 
 	on_change(false);
@@ -257,7 +257,7 @@ void sysvol::on_audio_callback() {
 	}
 }
 
-void sysvol::on_backlight_callback() {
+void syshud::on_backlight_callback() {
 	brightness = backlight->get_brightness();
 	on_change(true);
 	scale_volume.set_value(brightness);
@@ -279,7 +279,7 @@ void sysvol::on_backlight_callback() {
 }
 
 // This is a terrible mess, Dear lord.
-bool sysvol::timer() {
+bool syshud::timer() {
 	if (timeout == 1) {
 		// TODO: Add cancel event
 		Glib::signal_timeout().connect([]() {
