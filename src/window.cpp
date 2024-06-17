@@ -166,6 +166,15 @@ syshud::syshud() {
 }
 
 void syshud::on_change(bool reason_backlight) {
+	std::map<int, std::string> output_icons = {
+		{0, "audio-volume-muted-symbolic"},
+		{1, "audio-volume-low-symbolic"},
+		{2, "audio-volume-medium-symbolic"},
+		{3, "audio-volume-high-symbolic"},
+		{4, "audio-volume-overamplified-symbolic"},
+	};
+
+
 	int value;
 
 	// Check if we should draw the icons or not
@@ -192,35 +201,32 @@ void syshud::on_change(bool reason_backlight) {
 		get_style_context()->remove_class(output_class);
 
 		// TODO: Replace this with a map
+		// TODO: Redo the entire class thing
+		// Temporarily intentionally broken
 		if (muted) {
 			output_class = "muted-blocking";
 			input_class = "muted";
 		}
 		else if (volume > 100) {
-			output_class = "overamplified";
 			input_class = "high";
 		}
 		else if (volume >= 75) {
-			output_class = "high";
 			input_class = "high";
 		}
 		else if (volume >= 50) {
-			output_class = "medium";
 			input_class = "medium";
 		}
 		else if (volume >= 25) {
-			output_class = "low";
 			input_class = "medium";
 		}
 		else if (volume > 0) {
-			output_class = "muted";
 			input_class = "low";
 		}
 
 		get_style_context()->add_class(output_class);
 
 		if (!input)
-			image_volume.set_from_icon_name("audio-volume-" + output_class + "-symbolic");
+			image_volume.set_from_icon_name(output_icons[(volume - 1) / 25]);
 		else
 			image_volume.set_from_icon_name("audio-input-microphone-" + input_class + "-symbolic");
 	}
