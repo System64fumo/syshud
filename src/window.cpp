@@ -178,7 +178,11 @@ void syshud::on_change(bool reason_backlight) {
 		{1, "audio-input-microphone-medium-symbolic"},
 		{2, "audio-input-microphone-high-symbolic"},
 	};
-
+	std::map<int, std::string> value_levels = {
+		{0, "low"},
+		{1, "medium"},
+		{2, "high"},
+	};
 
 	int value;
 
@@ -205,16 +209,12 @@ void syshud::on_change(bool reason_backlight) {
 	}
 	else {
 		value = volume;
-		get_style_context()->remove_class(output_class);
 
-		// TODO: Redo the entire class thing
 		// Temporarily intentionally broken
 		if (muted) {
 			output_class = "muted-blocking";
 			input_class = "muted";
 		}
-
-		get_style_context()->add_class(output_class);
 
 		if (!input)
 			image_volume.set_from_icon_name(output_icons[(volume - 1) / 25]);
@@ -223,6 +223,11 @@ void syshud::on_change(bool reason_backlight) {
 			// TODO: Fix this
 			image_volume.set_from_icon_name(input_icons[volume / 34]);
 	}
+
+	// Set appropiate class
+	get_style_context()->remove_class(output_class);
+	output_class = value_levels[value / 34];
+	get_style_context()->add_class(output_class);
 
 	// Check if we should draw the percentage
 	if (show_percentage)
