@@ -1,4 +1,4 @@
-EXEC = sysvol
+EXEC = syshud
 PKGS = gtkmm-4.0 gtk4-layer-shell-0
 SRCS +=	$(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)

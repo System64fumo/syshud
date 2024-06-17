@@ -1,9 +1,10 @@
-# Sysvol
-Sysvol is a basic but functional volume indicator written in gtkmm4<br>
+# Syshud
+Syshud is a simple system status indicator written in gtkmm 4<br>
 ![preview](https://github.com/System64fumo/sysvol/blob/main/preview.gif "preview")
 
+
 # Configuration
-sysvol can be configured in 2 ways<br>
+syshud can be configured in 2 ways<br>
 1: By changing config.hpp and recompiling (Suckless style)<br>
 2: Using launch arguments<br>
 ```
@@ -27,8 +28,8 @@ make PULSEAUDIO=1
 ```
 
 # Theming
-sysvol uses your gtk4 theme by default, However it can be also load custom css,<br>
-Just copy the included volume.css file to ~/.config/sys64/volume.css<br>
+syshud uses your gtk4 theme by default, However it can be also load custom css,<br>
+Just copy the included hud.css file to ~/.config/sys64/hud.css<br>
 
 # Credits
 [Jason White](https://gist.github.com/jasonwhite/1df6ee4b5039358701d2) for showing how to write pulseaudio stuff<br>

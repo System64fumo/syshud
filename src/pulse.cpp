@@ -9,7 +9,7 @@ int PulseAudio::initialize() {
 		mainloop = pa_mainloop_new();
 		mainloop_api = pa_mainloop_get_api(mainloop);
 		pa_signal_init(mainloop_api);
-		context = pa_context_new(mainloop_api, "sysvol");
+		context = pa_context_new(mainloop_api, "syshud");
 		ret = pa_context_connect(context, NULL, PA_CONTEXT_NOAUTOSPAWN, NULL);
 		if (ret < 0)
 			return ret;

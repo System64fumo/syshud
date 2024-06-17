@@ -16,7 +16,7 @@
 
 #include "backlight.hpp"
 
-class sysvol : public Gtk::Window {
+class syshud : public Gtk::Window {
 
 	public:
 		int volume;
@@ -27,9 +27,9 @@ class sysvol : public Gtk::Window {
 		#ifdef PULSEAUDIO
 		PulseAudio pa;
 		#else
-		sysvol_wireplumber *sysvol_wp;
+		syshud_wireplumber *syshud_wp;
 		#endif
-		sysvol_backlight *backlight;
+		syshud_backlight *backlight;
 
 		Gtk::Scale scale_volume;
 		Gtk::Revealer revealer_box;
@@ -39,7 +39,7 @@ class sysvol : public Gtk::Window {
 		void on_audio_callback();
 		void on_backlight_callback();
 		bool hide_box();
-		sysvol();
+		syshud();
 
 	private:
 		std::string output_class;

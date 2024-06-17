@@ -14,7 +14,7 @@ void quit(int signum) {
 	// Disconnect pulseaudio
 	pa.quit(0);
 	#else
-	delete(win->sysvol_wp);
+	delete(win->syshud_wp);
 	#endif
 
 	thread_audio.join();
@@ -32,10 +32,10 @@ void audio_server() {
 	if (pa.initialize() != 0)
 		quit(0);
 #else
-	win->sysvol_wp = new sysvol_wireplumber(&win->dispatcher_audio);
+	win->syshud_wp = new syshud_wireplumber(&win->dispatcher_audio);
 #endif
 	if (backlight_path != "-")
-		win->backlight = new sysvol_backlight(&win->dispatcher_backlight, backlight_path);
+		win->backlight = new syshud_backlight(&win->dispatcher_backlight, backlight_path);
 }
 
 int main(int argc, char* argv[]) {
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
 			case 'h':
 			default :
 				std::cout << "usage:" << std::endl;
-				std::cout << "  sysvol [argument...]:\n" << std::endl;
+				std::cout << "  syshud [argument...]:\n" << std::endl;
 				std::cout << "arguments:" << std::endl;
 				std::cout << "  -p	Set position" << std::endl;
 				std::cout << "  -o	Set orientation" << std::endl;
@@ -117,9 +117,9 @@ int main(int argc, char* argv[]) {
 
 	signal(SIGINT, quit);
 
-	app = Gtk::Application::create("funky.sys64.sysvol");
+	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
-	win = new sysvol();
+	win = new syshud();
 
 	thread_audio = std::thread(audio_server);
 

@@ -5,4 +5,4 @@
 
 inline Glib::RefPtr<Gtk::Application> app;
 inline int timeout = 1;
-inline sysvol* win;
+inline syshud* win;

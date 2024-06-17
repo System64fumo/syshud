@@ -2,11 +2,11 @@
 #include <iostream>
 #include <cmath>
 
-bool sysvol_wireplumber::isValidNodeId(uint32_t id) {
+bool syshud_wireplumber::isValidNodeId(uint32_t id) {
 	return id > 0 && id < G_MAXUINT32;
 }
 
-void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self, uint32_t id) {
+void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 	GVariant* variant = nullptr;
 	if (!isValidNodeId(id)) {
 		std::cerr << "Invalid node ID: " << id << std::endl;
@@ -44,7 +44,7 @@ void sysvol_wireplumber::onMixerChanged(sysvol_wireplumber* self, uint32_t id) {
 	self->callback->emit();
 }
 
-void sysvol_wireplumber::onDefaultNodesApiChanged(sysvol_wireplumber* self) {
+void syshud_wireplumber::onDefaultNodesApiChanged(syshud_wireplumber* self) {
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
 	if (!isValidNodeId(self->node_id)) {
@@ -74,7 +74,7 @@ void sysvol_wireplumber::onDefaultNodesApiChanged(sysvol_wireplumber* self) {
 	std::cout << "Output ID: " << self->input_node_id << std::endl;
 }
 
-void sysvol_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self) {
+void syshud_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
 	const auto* pluginName = wp_plugin_get_name(WP_PLUGIN(p));
 	g_autoptr(GError) error = nullptr;
 	if (wp_object_activate_finish(p, res, &error) == 0) {
@@ -88,7 +88,7 @@ void sysvol_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, sysvo
 	}
 }
 
-void sysvol_wireplumber::activatePlugins() {
+void syshud_wireplumber::activatePlugins() {
 	for (uint16_t i = 0; i < apis->len; i++) {
 		WpPlugin* plugin = static_cast<WpPlugin*>(g_ptr_array_index(apis, i));
 		pending_plugins++;
@@ -97,7 +97,7 @@ void sysvol_wireplumber::activatePlugins() {
 	}
 }
 
-void sysvol_wireplumber::onMixerApiLoaded(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self) {
+void syshud_wireplumber::onMixerApiLoaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
 	gboolean success = FALSE;
 	g_autoptr(GError) error = nullptr;
 
@@ -117,7 +117,7 @@ void sysvol_wireplumber::onMixerApiLoaded(WpObject* p, GAsyncResult* res, sysvol
 	self->activatePlugins();
 }
 
-void sysvol_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res, sysvol_wireplumber* self) {
+void syshud_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
 	gboolean success = FALSE;
 	g_autoptr(GError) error = nullptr;
 
@@ -134,7 +134,7 @@ void sysvol_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res,
 							"mixer-api", nullptr, (GAsyncReadyCallback)onMixerApiLoaded, self);
 }
 
-void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
+void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 	self->def_nodes_api = wp_plugin_find(self->core, "default-nodes-api");
 
 	if (self->def_nodes_api == nullptr) {
@@ -159,7 +159,7 @@ void sysvol_wireplumber::onObjectManagerInstalled(sysvol_wireplumber* self) {
 							 self);
 }
 
-sysvol_wireplumber::sysvol_wireplumber(Glib::Dispatcher* callback) {
+syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* callback) {
 	this->callback = callback;
 	wp_init(WP_INIT_PIPEWIRE);
 	core = wp_core_new(NULL, NULL, NULL);
@@ -182,7 +182,7 @@ sysvol_wireplumber::sysvol_wireplumber(Glib::Dispatcher* callback) {
 							this);
 }
 
-sysvol_wireplumber::~sysvol_wireplumber() {
+syshud_wireplumber::~syshud_wireplumber() {
 	wp_core_disconnect(core);
 	g_clear_pointer(&apis, g_ptr_array_unref);
 	g_clear_object(&om);
