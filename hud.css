@@ -67,8 +67,8 @@ scale.vertical slider {
 	padding: 0px;
 }
 
-/* Volume states */
-.overamplified {
+/* Levels */
+.over {
 }
 .high {
 }
@@ -76,7 +76,5 @@ scale.vertical slider {
 }
 .low {
 }
-.muted {
-}
-.muted-blocking {
+.off {
 }
