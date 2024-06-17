@@ -42,8 +42,7 @@ class syshud : public Gtk::Window {
 		syshud();
 
 	private:
-		std::string output_class;
-		std::string input_class;
+		std::string previous_class;
 
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;

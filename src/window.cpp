@@ -166,6 +166,10 @@ syshud::syshud() {
 }
 
 void syshud::on_change(bool reason_backlight) {
+	std::string icon;
+	int value;
+
+	// Maps
 	std::map<int, std::string> output_icons = {
 		{0, "audio-volume-muted-symbolic"},
 		{1, "audio-volume-low-symbolic"},
@@ -173,60 +177,62 @@ void syshud::on_change(bool reason_backlight) {
 		{3, "audio-volume-high-symbolic"},
 		{4, "audio-volume-overamplified-symbolic"},
 	};
-	std::map<int, std::string> input_icons = {
-		{0, "audio-input-microphone-low-symbolic"},
-		{1, "audio-input-microphone-medium-symbolic"},
-		{2, "audio-input-microphone-high-symbolic"},
-	};
-	std::map<int, std::string> brightness_icons = {
-		{0, "display-brightness-low-symbolic"},
-		{1, "display-brightness-medium-symbolic"},
-		{2, "display-brightness-high-symbolic"},
-	};
 	std::map<int, std::string> value_levels = {
-		{0, "low"},
-		{1, "medium"},
-		{2, "high"},
+		{0, "muted"},
+		{1, "low"},
+		{2, "medium"},
+		{3, "high"},
 	};
-
-	int value;
 
 	// Check if we should draw the icons or not
 	if (icon_size == 0)
 		return;
 
+	// TODO: Replace reason with char instead of bool?
 	if (reason_backlight) {
 		value = brightness;
 
-		image_volume.set_from_icon_name(brightness_icons[brightness / 34]);
+		if (brightness == 0)
+			icon = "display-brightness-off-symbolic";
+		else
+			icon = "display-brightness-" + value_levels[brightness / 34 + 1] + "-symbolic";
 	}
 	else {
 		value = volume;
 
-		// Temporarily intentionally broken
-		if (muted) {
-			output_class = "muted-blocking";
-			input_class = "muted";
+		if (!input) {
+			if (muted)
+				icon = "audio-volume-muted-blocking-symbolic";
+			else
+				icon = output_icons[(value - 1) / 25];
 		}
-
-		if (!input)
-			image_volume.set_from_icon_name(output_icons[(volume - 1) / 25]);
-		else
-			// Realize that input levels above 100% will not be rendered now..
-			// TODO: Fix this
-			image_volume.set_from_icon_name(input_icons[volume / 34]);
+		else if (volume <= 100) {
+			if (muted)
+				icon = "audio-input-microphone-muted-symbolic";
+			else
+				icon = "audio-input-microphone-" + value_levels[value / 34 + 1] + "-symbolic";
+		}
 	}
 
 	// Set appropiate class
-	get_style_context()->remove_class(output_class);
-	output_class = value_levels[value / 34];
-	get_style_context()->add_class(output_class);
+	if (value < 100) {
+		get_style_context()->remove_class(previous_class);
+		if (muted) {
+			previous_class = value_levels[0];
+		}
+		else {
+			previous_class = value_levels[value / 34 + 1];
+		}
+		get_style_context()->add_class(previous_class);
+	}
+
+	// Set the appropiate icon
+	if (!icon.empty())
+		image_volume.set_from_icon_name(icon);
 
 	// Check if we should draw the percentage
 	if (show_percentage)
 		label_volume.set_label(std::to_string(value) + "\%");
-
-
 }
 
 void syshud::on_audio_callback() {
