@@ -178,6 +178,11 @@ void syshud::on_change(bool reason_backlight) {
 		{1, "audio-input-microphone-medium-symbolic"},
 		{2, "audio-input-microphone-high-symbolic"},
 	};
+	std::map<int, std::string> brightness_icons = {
+		{0, "display-brightness-low-symbolic"},
+		{1, "display-brightness-medium-symbolic"},
+		{2, "display-brightness-high-symbolic"},
+	};
 	std::map<int, std::string> value_levels = {
 		{0, "low"},
 		{1, "medium"},
@@ -193,19 +198,7 @@ void syshud::on_change(bool reason_backlight) {
 	if (reason_backlight) {
 		value = brightness;
 
-		// TODO: Replace this with a map
-		if (brightness > 75) {
-			image_volume.set_from_icon_name("display-brightness-high-symbolic");
-		}
-		else if (brightness >= 50) {
-			image_volume.set_from_icon_name("display-brightness-medium-symbolic");
-		}
-		else if (brightness >= 25) {
-			image_volume.set_from_icon_name("display-brightness-low-symbolic");
-		}
-		else if (brightness >= 0) {
-			image_volume.set_from_icon_name("display-brightness-off-symbolic");
-		}
+		image_volume.set_from_icon_name(brightness_icons[brightness / 34]);
 	}
 	else {
 		value = volume;
