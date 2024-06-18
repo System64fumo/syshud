@@ -6,6 +6,7 @@
 #include <gtkmm/cssprovider.h>
 #include <filesystem>
 #include <iostream>
+#include <thread>
 
 bool timer_ticking = false;
 
@@ -39,6 +40,8 @@ syshud::syshud() {
 	// Initialize
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
+	std::thread audio_thread(&syshud::audio_server, this);
+	audio_thread.detach();
 
 	// Set layout
 	if (orientation == 'h') {
@@ -164,12 +167,12 @@ syshud::syshud() {
 }
 
 void syshud::on_change(bool reason_backlight) {
-	//
+
 	if (timer_ticking)
 		timeout = desired_timeout;
-		
+
 	else if (timeout == 1) {
-		win->show();
+		show();
 
 		revealer_box.set_reveal_child(true);
 		timer_ticking = true;
@@ -267,6 +270,18 @@ void syshud::on_audio_callback() {
 void syshud::on_backlight_callback() {
 	brightness = backlight->get_brightness();
 	on_change(true);
+}
+
+void syshud::audio_server() {
+	#ifdef PULSEAUDIO
+	pa = PulseAudio();
+	if (pa.initialize() != 0)
+		quit(0);
+	#else
+	syshud_wp = new syshud_wireplumber(&dispatcher_audio);
+	#endif
+	if (backlight_path != "-")
+		backlight = new syshud_backlight(&dispatcher_backlight, backlight_path);
 }
 
 // This is a terrible mess, Dear lord.

@@ -1,13 +1,9 @@
 #include "main.hpp"
-#include "window.hpp"
 #include "config.hpp"
 #include "git_info.hpp"
 
 #include <iostream>
-#include <thread>
 #include <signal.h>
-
-std::thread thread_audio;
 
 void quit(int signum) {
 	#ifdef PULSEAUDIO
@@ -17,25 +13,11 @@ void quit(int signum) {
 	delete(win->syshud_wp);
 	#endif
 
-	thread_audio.join();
-
 	// Remove window
 	app->release();
 	app->remove_window(*win);
 	delete win;
 	app->quit();
-}
-
-void audio_server() {
-#ifdef PULSEAUDIO
-	pa = PulseAudio();
-	if (pa.initialize() != 0)
-		quit(0);
-#else
-	win->syshud_wp = new syshud_wireplumber(&win->dispatcher_audio);
-#endif
-	if (backlight_path != "-")
-		win->backlight = new syshud_backlight(&win->dispatcher_backlight, backlight_path);
 }
 
 int main(int argc, char* argv[]) {
@@ -120,8 +102,6 @@ int main(int argc, char* argv[]) {
 	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
 	win = new syshud();
-
-	thread_audio = std::thread(audio_server);
 
 	return app->run();
 }
