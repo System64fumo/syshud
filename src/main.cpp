@@ -16,7 +16,6 @@ void quit(int signum) {
 	// Remove window
 	app->release();
 	app->remove_window(*win);
-	delete win;
 	app->quit();
 }
 
@@ -101,7 +100,6 @@ int main(int argc, char* argv[]) {
 
 	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
-	win = new syshud();
 
-	return app->run();
+	return app->make_window_and_run<syshud>(argc, argv);
 }
