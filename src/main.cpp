@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	#ifdef RUNTIME_CONFIG
 	// Read launch arguments
 	while (true) {
-		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dvh")) {
+		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dM:dvh")) {
 			case 'p':
 				position = optarg;
 				continue;
@@ -64,6 +64,10 @@ int main(int argc, char* argv[]) {
 				backlight_path = optarg;
 				continue;
 
+			case 'M':
+				monitors = optarg;
+				continue;
+
 			case 'v':
 				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
 				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
@@ -84,6 +88,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -t	Set timeout" << std::endl;
 				std::cout << "  -T	Set transition time" << std::endl;
 				std::cout << "  -b	Set custom backlight path" << std::endl;
+				std::cout << "  -M	Set things to monitor" << std::endl;
 				std::cout << "  -v	Prints version info" << std::endl;
 				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;
@@ -101,5 +106,5 @@ int main(int argc, char* argv[]) {
 	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
 
-	return app->make_window_and_run<syshud>(argc, argv);
+	return app->make_window_and_run<syshud>(0, nullptr);
 }
