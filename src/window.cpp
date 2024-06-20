@@ -161,7 +161,7 @@ syshud::syshud() {
 	css_loader loader(css_path, this);
 }
 
-void syshud::on_change(bool reason_backlight) {
+void syshud::on_change(char reason) {
 
 	if (timer_ticking)
 		timeout = desired_timeout;
@@ -198,7 +198,7 @@ void syshud::on_change(bool reason_backlight) {
 		return;
 
 	// TODO: Replace reason with char instead of bool?
-	if (reason_backlight) {
+	if (reason == 'b') {
 		value = brightness;
 
 		if (brightness == 0)
@@ -259,12 +259,15 @@ void syshud::on_audio_callback() {
 			return;
 	}
 
-	on_change(false);
+	if (input)
+		on_change('i');
+	else
+		on_change('o');
 }
 
 void syshud::on_backlight_callback() {
 	brightness = backlight->get_brightness();
-	on_change(true);
+	on_change('b');
 }
 
 void syshud::audio_server() {
