@@ -31,9 +31,7 @@ class syshud : public Gtk::Window {
 
 
 	private:
-		int volume;
 		bool muted;
-		int brightness;
 		bool first_run = false;
 		std::string previous_class;
 
@@ -47,8 +45,8 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_backlight;
 
 		void InitLayout();
-		void on_change(char reason);
-		void on_audio_callback(bool input);
+		void on_change(const char &reason, const int &value);
+		void on_audio_callback(const bool &input);
 		void on_backlight_callback();
 		void audio_server();
 		static bool timer();
