@@ -38,7 +38,6 @@ syshud::syshud() {
 	}
 
 	// Initialize
-	win = this;
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
 	std::thread audio_thread(&syshud::audio_server, this);
