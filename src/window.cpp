@@ -161,7 +161,7 @@ syshud::syshud() {
 	css_loader loader(css_path, this);
 }
 
-void syshud::on_change(char reason) {
+void syshud::on_change(const char &reason, const int &value) {
 
 	if (timer_ticking)
 		timeout = desired_timeout;
@@ -176,7 +176,6 @@ void syshud::on_change(char reason) {
 	}
 
 	std::string icon;
-	int value;
 
 	// Maps
 	std::map<int, std::string> output_icons = {
@@ -197,26 +196,19 @@ void syshud::on_change(char reason) {
 	if (icon_size == 0)
 		return;
 
-	// TODO: Replace reason with char instead of bool?
 	if (reason == 'b') {
-		value = brightness;
-
-		if (brightness == 0)
+		if (value == 0)
 			icon = "display-brightness-off-symbolic";
 		else
-			icon = "display-brightness-" + value_levels[brightness / 34 + 1] + "-symbolic";
+			icon = "display-brightness-" + value_levels[value / 34 + 1] + "-symbolic";
 	}
 	else if (reason == 'i') {
-		value = volume;
-
 		if (muted)
 			icon = "audio-input-microphone-muted-symbolic";
-		else if (volume <= 100)
+		else if (value <= 100)
 			icon = "audio-input-microphone-" + value_levels[value / 34 + 1] + "-symbolic";
 	}
 	else if (reason == 'o') {
-		value = volume;
-
 		if (muted)
 			icon = "audio-volume-muted-blocking-symbolic";
 		else
@@ -247,7 +239,9 @@ void syshud::on_change(char reason) {
 		label_volume.set_label(std::to_string(value) + "\%");
 }
 
-void syshud::on_audio_callback(bool input) {
+void syshud::on_audio_callback(const bool &input) {
+	int volume = syshud_wp->volume;
+
 	#ifndef PULSEAUDIO
 	volume = syshud_wp->volume;
 	muted = syshud_wp->muted;
@@ -259,14 +253,13 @@ void syshud::on_audio_callback(bool input) {
 	}
 
 	if (input)
-		on_change('i');
+		on_change('i', volume);
 	else
-		on_change('o');
+		on_change('o', volume);
 }
 
 void syshud::on_backlight_callback() {
-	brightness = backlight->get_brightness();
-	on_change('b');
+	on_change('b', backlight->get_brightness());
 }
 
 void syshud::audio_server() {
