@@ -268,15 +268,29 @@ void syshud::on_backlight_callback() {
 }
 
 void syshud::audio_server() {
-	#ifdef PULSEAUDIO
-	pa = PulseAudio();
-	if (pa.initialize() != 0)
-		quit(0);
-	#else
-	syshud_wp = new syshud_wireplumber(&dispatcher_audio);
-	#endif
-	if (backlight_path != "-")
-		backlight = new syshud_backlight(&dispatcher_backlight, backlight_path);
+	std::istringstream iss(monitors);
+	std::string monitor;
+
+	while (std::getline(iss, monitor, ',')) {
+		if (monitor == "audio_in") {
+		}
+		else if (monitor == "audio_out") {
+			// Not ideal but for now this will do
+			#ifdef PULSEAUDIO
+			pa = PulseAudio();
+			if (pa.initialize() != 0)
+				quit(0);
+			#else
+			syshud_wp = new syshud_wireplumber(&dispatcher_audio);
+			#endif
+		}
+		else if (monitor == "brightness") {
+			backlight = new syshud_backlight(&dispatcher_backlight, backlight_path);
+		}
+		else {
+			std::cerr << "Unknown monitor: " << monitor << std::endl;
+		}
+	}
 }
 
 // This is a terrible mess, Dear lord.
