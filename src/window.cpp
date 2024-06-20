@@ -151,7 +151,8 @@ syshud::syshud() {
 	if (show_percentage)
 		label_volume.set_size_request(height, height);
 
-	dispatcher_audio.connect(sigc::mem_fun(*this, &syshud::on_audio_callback));
+	dispatcher_audio_in.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), true));
+	dispatcher_audio_out.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), false));
 	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
 
 	// Load custom css
@@ -205,21 +206,21 @@ void syshud::on_change(char reason) {
 		else
 			icon = "display-brightness-" + value_levels[brightness / 34 + 1] + "-symbolic";
 	}
-	else {
+	else if (reason == 'i') {
 		value = volume;
 
-		if (!input) {
-			if (muted)
-				icon = "audio-volume-muted-blocking-symbolic";
-			else
-				icon = output_icons[(value - 1) / 25];
-		}
-		else if (volume <= 100) {
-			if (muted)
-				icon = "audio-input-microphone-muted-symbolic";
-			else
-				icon = "audio-input-microphone-" + value_levels[value / 34 + 1] + "-symbolic";
-		}
+		if (muted)
+			icon = "audio-input-microphone-muted-symbolic";
+		else if (volume <= 100)
+			icon = "audio-input-microphone-" + value_levels[value / 34 + 1] + "-symbolic";
+	}
+	else if (reason == 'o') {
+		value = volume;
+
+		if (muted)
+			icon = "audio-volume-muted-blocking-symbolic";
+		else
+			icon = output_icons[(value - 1) / 25];
 	}
 
 	// Set appropiate class
@@ -246,11 +247,10 @@ void syshud::on_change(char reason) {
 		label_volume.set_label(std::to_string(value) + "\%");
 }
 
-void syshud::on_audio_callback() {
+void syshud::on_audio_callback(bool input) {
 	#ifndef PULSEAUDIO
 	volume = syshud_wp->volume;
 	muted = syshud_wp->muted;
-	input = syshud_wp->input;
 	#endif
 
 	if (!first_run) {
@@ -273,18 +273,15 @@ void syshud::audio_server() {
 	std::istringstream iss(monitors);
 	std::string monitor;
 
+	Glib::Dispatcher *audio_in = nullptr;
+	Glib::Dispatcher *audio_out = nullptr;
+
 	while (std::getline(iss, monitor, ',')) {
 		if (monitor == "audio_in") {
+			audio_in = &dispatcher_audio_in;
 		}
 		else if (monitor == "audio_out") {
-			// Not ideal but for now this will do
-			#ifdef PULSEAUDIO
-			pa = PulseAudio();
-			if (pa.initialize() != 0)
-				quit(0);
-			#else
-			syshud_wp = new syshud_wireplumber(&dispatcher_audio);
-			#endif
+			audio_out = &dispatcher_audio_out;
 		}
 		else if (monitor == "brightness") {
 			backlight = new syshud_backlight(&dispatcher_backlight, backlight_path);
@@ -292,6 +289,18 @@ void syshud::audio_server() {
 		else {
 			std::cerr << "Unknown monitor: " << monitor << std::endl;
 		}
+	}
+
+	if (audio_in != nullptr || audio_out != nullptr) {
+		// Pulse waiting for an update be like: https://tenor.com/view/mr-bean-waiting-still-waiting-gif-13052487
+		// TODO: Either deprecate or improve pulse audio.
+		#ifdef PULSEAUDIO
+		pa = PulseAudio();
+		if (pa.initialize() != 0)
+			quit(0);
+		#else
+		syshud_wp = new syshud_wireplumber(audio_in, audio_out);
+		#endif
 	}
 }
 

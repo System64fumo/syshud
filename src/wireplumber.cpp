@@ -39,9 +39,15 @@ void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 							WP_PIPEWIRE_OBJECT(node), "media.class"));
 
 	// Set values and trigger a callback
-	self->input = (media_class == "Audio/Source");
 	self->volume = round(temp_volume * 100.0);
-	self->callback->emit();
+	if (media_class == "Audio/Source") {
+		if (self->input_callback != nullptr)
+			self->input_callback->emit();
+	}
+	else {
+		if (self->output_callback != nullptr)
+			self->output_callback->emit();
+	}
 }
 
 void syshud_wireplumber::onDefaultNodesApiChanged(syshud_wireplumber* self) {
@@ -159,8 +165,9 @@ void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 							 self);
 }
 
-syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* callback) {
-	this->callback = callback;
+syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) {
+	this->input_callback = input_callback;
+	this->output_callback = output_callback;
 	wp_init(WP_INIT_PIPEWIRE);
 	core = wp_core_new(NULL, NULL, NULL);
 	apis = g_ptr_array_new_with_free_func(g_object_unref);

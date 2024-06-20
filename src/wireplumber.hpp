@@ -4,15 +4,15 @@
 
 class syshud_wireplumber {
 	public:
-		int volume;
-		bool muted;
-		bool input;
-
-		syshud_wireplumber(Glib::Dispatcher* callback);
+		syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback);
 		virtual ~syshud_wireplumber();
 
+		int volume;
+		bool muted;
+
 	private:
-		Glib::Dispatcher* callback;
+		Glib::Dispatcher* input_callback;
+		Glib::Dispatcher* output_callback;
 
 		GPtrArray *apis;
 		WpCore *core;
