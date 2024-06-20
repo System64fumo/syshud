@@ -105,6 +105,7 @@ int main(int argc, char* argv[]) {
 
 	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
+	win = new syshud();
 
-	return app->make_window_and_run<syshud>(0, nullptr);
+	return app->run();
 }
