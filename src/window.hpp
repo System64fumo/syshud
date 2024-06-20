@@ -47,7 +47,7 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_backlight;
 
 		void InitLayout();
-		void on_change(bool reason_backlight);
+		void on_change(char reason);
 		void on_audio_callback();
 		void on_backlight_callback();
 		void audio_server();
