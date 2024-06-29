@@ -1,22 +1,23 @@
 #pragma once
 
+// Build time configuration				Description
+#define RUNTIME_CONFIG					// Allow the use of runtime arguments
+
 /*
 	Default config.
 	Can be configured instead of using launch arguments.
 */
 
-// Current														Default
-inline std::string position = "bottom";							// bottom
-inline char orientation = 'h';									// h
-inline int width = 300;											// 300
-inline int height = 50;											// 50
-inline int icon_size = 26;										// 26
-inline bool show_percentage = true;								// true
-inline std::string margins = "0 0 0 0";							// 0 0 0 0
-inline int desired_timeout = 3;									// 3
-inline int transition_time = 250;								// 250
-inline std::string backlight_path = "";							// ""
-inline std::string monitors = "audio_in,audio_out,brightness";	// "audio_in,audio_out,brightness"
-
-// Build time configuration				Description
-#define RUNTIME_CONFIG					// Allow the use of runtime arguments
+inline struct config {
+	std::string position = "bottom";
+	char orientation = 'h';
+	int width = 300;
+	int height = 50;
+	int icon_size = 26;
+	bool show_percentage = true;
+	std::string margins = "0 0 0 0";
+	int desired_timeout = 3;
+	int transition_time = 250;
+	std::string backlight_path = "";
+	std::string monitors = "audio_in,audio_out,brightness";
+} config_main;

@@ -16,10 +16,10 @@ syshud::syshud() {
 	gtk_layer_set_namespace(gobj(), "syshud");
 	gtk_layer_set_layer(gobj(), GTK_LAYER_SHELL_LAYER_OVERLAY);
 
-	bool edge_top = (position.find("top") != std::string::npos);
-	bool edge_right = (position.find("right") != std::string::npos);
-	bool edge_bottom = (position.find("bottom") != std::string::npos);
-	bool edge_left = (position.find("left") != std::string::npos);
+	bool edge_top = (config_main.position.find("top") != std::string::npos);
+	bool edge_right = (config_main.position.find("right") != std::string::npos);
+	bool edge_bottom = (config_main.position.find("bottom") != std::string::npos);
+	bool edge_left = (config_main.position.find("left") != std::string::npos);
 
 	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_TOP, edge_top);
 	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, edge_right);
@@ -44,19 +44,19 @@ syshud::syshud() {
 	audio_thread.detach();
 
 	// Set layout
-	if (orientation == 'h') {
+	if (config_main.orientation == 'h') {
 		// Horizontal layout
 		get_style_context()->add_class("horizontal");
-		set_default_size(width, height);
+		set_default_size(config_main.width, config_main.height);
 
 		// Check to see if the icon should be shown
-		if (icon_size != 0)
+		if (config_main.icon_size != 0)
 			box_layout.append(image_volume);
 
 		box_layout.append(scale_volume);
 
 		// Check to see if the percentage should be shown
-		if (show_percentage)
+		if (config_main.show_percentage)
 			box_layout.append(label_volume);
 
 		scale_volume.set_hexpand(true);
@@ -72,21 +72,21 @@ syshud::syshud() {
 			revealer_box.set_valign(Gtk::Align::END);
 		}
 	}
-	else if (orientation == 'v') {
+	else if (config_main.orientation == 'v') {
 		// Vertical layout
 		get_style_context()->add_class("vertical");
 		scale_volume.set_orientation(Gtk::Orientation::VERTICAL);
 		box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-		set_default_size(height, width);
+		set_default_size(config_main.height, config_main.width);
 
 		// Check to see if the percentage should be shown
-		if (show_percentage)
+		if (config_main.show_percentage)
 			box_layout.append(label_volume);
 
 		box_layout.append(scale_volume);
 
 		// Check to see if the icon should be shown
-		if (icon_size != 0)
+		if (config_main.icon_size != 0)
 			box_layout.append(image_volume);
 
 		scale_volume.set_vexpand(true);
@@ -104,12 +104,12 @@ syshud::syshud() {
 		}
 	}
 	else {
-		std::cerr << "Unknown orientation: " << orientation << std::endl;
+		std::cerr << "Unknown orientation: " << config_main.orientation << std::endl;
 		return;
 	}
 
 	// Set margins
-	std::istringstream iss(margins);
+	std::istringstream iss(config_main.margins);
 	std::string margin;
 	int count = 0;
 	while (std::getline(iss, margin, ' ')) {
@@ -125,7 +125,7 @@ syshud::syshud() {
 	}
 
 	// Animations disabled
-	if (transition_time == 0)
+	if (config_main.transition_time == 0)
 		set_child(box_layout);
 
 	// Animations enabled
@@ -133,7 +133,7 @@ syshud::syshud() {
 		set_child(revealer_box);
 		revealer_box.set_child(box_layout);
 		revealer_box.set_transition_type(transition_type);
-		revealer_box.set_transition_duration(transition_time);
+		revealer_box.set_transition_duration(config_main.transition_time);
 		revealer_box.set_reveal_child(false);
 	}
 
@@ -143,13 +143,13 @@ syshud::syshud() {
 	// TODO: Re enable this once code for setting volume has been added
 	scale_volume.set_sensitive(false);
 
-	if (icon_size != 0) {
-		image_volume.set_pixel_size(icon_size);
-		image_volume.set_size_request(height, height);
+	if (config_main.icon_size != 0) {
+		image_volume.set_pixel_size(config_main.icon_size);
+		image_volume.set_size_request(config_main.height, config_main.height);
 	}
 
-	if (show_percentage)
-		label_volume.set_size_request(height, height);
+	if (config_main.show_percentage)
+		label_volume.set_size_request(config_main.height, config_main.height);
 
 	dispatcher_audio_in.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), true));
 	dispatcher_audio_out.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), false));
@@ -165,14 +165,14 @@ void syshud::on_change(const char &reason, const int &value) {
 	timeout_connection.disconnect();
 
 	if (timer_ticking)
-		timeout = desired_timeout;
+		timeout = config_main.desired_timeout;
 
 	else if (timeout == 1) {
 		show();
 
 		revealer_box.set_reveal_child(true);
 		timer_ticking = true;
-		timeout = desired_timeout;
+		timeout = config_main.desired_timeout;
 		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
 	}
 
@@ -194,7 +194,7 @@ void syshud::on_change(const char &reason, const int &value) {
 	};
 
 	// Check if we should draw the icons or not
-	if (icon_size == 0)
+	if (config_main.icon_size == 0)
 		return;
 
 	if (reason == 'b') {
@@ -236,7 +236,7 @@ void syshud::on_change(const char &reason, const int &value) {
 	scale_volume.set_value(value);
 
 	// Check if we should draw the percentage
-	if (show_percentage)
+	if (config_main.show_percentage)
 		label_volume.set_label(std::to_string(value) + "\%");
 }
 
@@ -264,7 +264,7 @@ void syshud::on_backlight_callback() {
 }
 
 void syshud::audio_server() {
-	std::istringstream iss(monitors);
+	std::istringstream iss(config_main.monitors);
 	std::string monitor;
 
 	Glib::Dispatcher *audio_in = nullptr;
@@ -278,7 +278,7 @@ void syshud::audio_server() {
 			audio_out = &dispatcher_audio_out;
 		}
 		else if (monitor == "brightness") {
-			backlight = new syshud_backlight(&dispatcher_backlight, backlight_path);
+			backlight = new syshud_backlight(&dispatcher_backlight, config_main.backlight_path);
 		}
 		else {
 			std::cerr << "Unknown monitor: " << monitor << std::endl;
@@ -304,7 +304,7 @@ bool syshud::timer() {
 		win->timeout_connection = Glib::signal_timeout().connect([]() {
 			win->hide();
 			return false;
-		}, transition_time);
+		}, config_main.transition_time);
 		win->revealer_box.set_reveal_child(false);
 		timer_ticking = false;
 		return false;

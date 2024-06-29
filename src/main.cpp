@@ -25,47 +25,47 @@ int main(int argc, char* argv[]) {
 	while (true) {
 		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dM:dvh")) {
 			case 'p':
-				position = optarg;
+				config_main.position = optarg;
 				continue;
 
 			case 'o':
-				orientation = optarg[0];
+				config_main.orientation = optarg[0];
 				continue;
 
 			case 'W':
-				width = std::stoi(optarg);
+				config_main.width = std::stoi(optarg);
 				continue;
 
 			case 'H':
-				height = std::stoi(optarg);
+				config_main.height = std::stoi(optarg);
 				continue;
 
 			case 'i':
-				icon_size = std::stoi(optarg);
+				config_main.icon_size = std::stoi(optarg);
 				continue;
 
 			case 'P':
-				show_percentage = false;
+				config_main.show_percentage = false;
 				continue;
 
 			case 'm':
-				margins = optarg;
+				config_main.margins = optarg;
 				continue;
 
 			case 't':
-				desired_timeout = std::stoi(optarg);
+				config_main.desired_timeout = std::stoi(optarg);
 				continue;
 
 			case 'T':
-				transition_time = std::stoi(optarg);
+				config_main.transition_time = std::stoi(optarg);
 				continue;
 
 			case 'b':
-				backlight_path = optarg;
+				config_main.backlight_path = optarg;
 				continue;
 
 			case 'M':
-				monitors = optarg;
+				config_main.monitors = optarg;
 				continue;
 
 			case 'v':
