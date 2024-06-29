@@ -162,6 +162,7 @@ syshud::syshud() {
 }
 
 void syshud::on_change(const char &reason, const int &value) {
+	timeout_connection.disconnect();
 
 	if (timer_ticking)
 		timeout = desired_timeout;
@@ -300,8 +301,7 @@ void syshud::audio_server() {
 // This is a terrible mess, Dear lord.
 bool syshud::timer() {
 	if (timeout == 1) {
-		// TODO: Add cancel event
-		Glib::signal_timeout().connect([]() {
+		win->timeout_connection = Glib::signal_timeout().connect([]() {
 			win->hide();
 			return false;
 		}, transition_time);
