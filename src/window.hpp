@@ -20,6 +20,7 @@ class syshud : public Gtk::Window {
 
 	public:
 		syshud();
+		sigc::connection timeout_connection;
 		Gtk::Revealer revealer_box;
 
 		#ifdef PULSEAUDIO
