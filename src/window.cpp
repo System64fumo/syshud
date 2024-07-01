@@ -8,8 +8,6 @@
 #include <iostream>
 #include <thread>
 
-bool timer_ticking = false;
-
 syshud::syshud() {
 	// Initialize layer shell
 	gtk_layer_init_for_window(gobj());
@@ -173,7 +171,7 @@ void syshud::on_change(const char &reason, const int &value) {
 		revealer_box.set_reveal_child(true);
 		timer_ticking = true;
 		timeout = config_main.desired_timeout;
-		Glib::signal_timeout().connect(sigc::ptr_fun(&timer), 1000);
+		Glib::signal_timeout().connect(sigc::mem_fun(*this, &syshud::timer), 1000);
 	}
 
 	std::string icon;
@@ -209,7 +207,6 @@ void syshud::on_change(const char &reason, const int &value) {
 			icon = "audio-volume-" + value_levels[value / 34 + 1] + "-symbolic";
 		else
 			icon = "audio-volume-overamplified-symbolic";
-		std::cout << value << std::endl;
 	}
 
 	// Set appropiate class
@@ -294,15 +291,18 @@ void syshud::audio_server() {
 	}
 }
 
-// This is a terrible mess, Dear lord.
 bool syshud::timer() {
 	if (timeout == 1) {
-		win->timeout_connection = Glib::signal_timeout().connect([]() {
-			win->hide();
+		// Start hiding the overlay
+		revealer_box.set_reveal_child(false);
+		timer_ticking = false;
+
+		// Hide the overlay after it's no longer visible
+		timeout_connection = Glib::signal_timeout().connect([&]() {
+			hide();
 			return false;
 		}, config_main.transition_time);
-		win->revealer_box.set_reveal_child(false);
-		timer_ticking = false;
+
 		return false;
 	}
 	else
