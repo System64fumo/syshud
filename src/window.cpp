@@ -178,14 +178,7 @@ void syshud::on_change(const char &reason, const int &value) {
 
 	std::string icon;
 
-	// Maps
-	std::map<int, std::string> output_icons = {
-		{0, "audio-volume-muted-symbolic"},
-		{1, "audio-volume-low-symbolic"},
-		{2, "audio-volume-medium-symbolic"},
-		{3, "audio-volume-high-symbolic"},
-		{4, "audio-volume-overamplified-symbolic"},
-	};
+	// Map
 	std::map<int, std::string> value_levels = {
 		{0, "muted"},
 		{1, "low"},
@@ -212,8 +205,11 @@ void syshud::on_change(const char &reason, const int &value) {
 	else if (reason == 'o') {
 		if (muted)
 			icon = "audio-volume-muted-blocking-symbolic";
+		else if (value <= 100)
+			icon = "audio-volume-" + value_levels[value / 34 + 1] + "-symbolic";
 		else
-			icon = output_icons[(value - 1) / 25];
+			icon = "audio-volume-overamplified-symbolic";
+		std::cout << value << std::endl;
 	}
 
 	// Set appropiate class
