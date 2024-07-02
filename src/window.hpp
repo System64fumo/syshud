@@ -24,7 +24,7 @@ class syshud : public Gtk::Window {
 		Gtk::Revealer revealer_box;
 
 		#ifdef PULSEAUDIO
-		PulseAudio pa;
+		PulseAudio *pa;
 		#else
 		syshud_wireplumber *syshud_wp;
 		#endif

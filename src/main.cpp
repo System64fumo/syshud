@@ -8,7 +8,7 @@
 void quit(int signum) {
 	#ifdef PULSEAUDIO
 	// Disconnect pulseaudio
-	pa.quit(0);
+	win->pa->quit(0);
 	#else
 	delete(win->syshud_wp);
 	#endif
