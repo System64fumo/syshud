@@ -4,6 +4,10 @@
 
 const char* default_sink;
 
+PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) : mainloop(NULL), mainloop_api(NULL), context(NULL), signal(NULL) {
+	this->output_callback = output_callback;
+}
+
 int PulseAudio::initialize() {
 		int ret = 1;
 		mainloop = pa_mainloop_new();
@@ -95,23 +99,24 @@ void PulseAudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t 
 }
 
 void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
+	PulseAudio* pa = (PulseAudio*)userdata;
 	if (!i)
 		return;
 
 	if (strcmp(i->name, default_sink))
 		return;
 
-	// Get previous values
-	int previous_volume = win->volume;
-	bool previous_mute = win->muted;
-
 	// Set new values
-	win->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
-	win->muted = i->mute;
+	pa->volume = roundf(((float)pa_cvolume_avg(&(i->volume)) / (float)PA_VOLUME_NORM) * 100.0f);
+	pa->muted = i->mute;
 
 	// Trigger an update if needed
-	if (win->volume != previous_volume || win->muted != previous_mute)
-		win->m_Dispatcher.emit();
+	if (pa->volume != pa->previous_volume || pa->muted != pa->previous_muted) {
+		pa->output_callback->emit();
+
+		pa->previous_volume = pa->volume;
+		pa->previous_muted = pa->muted;
+	}
 }
 
 void PulseAudio::server_info_callback(pa_context *c, const pa_server_info *i, void *userdata) {

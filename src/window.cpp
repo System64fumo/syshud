@@ -234,10 +234,13 @@ void syshud::on_change(const char &reason, const int &value) {
 }
 
 void syshud::on_audio_callback(const bool &input) {
-	int volume = syshud_wp->volume;
+	#ifdef PULSEAUDIO
+	int volume = pa->volume;
+	muted = pa->muted;
+	#endif
 
 	#ifndef PULSEAUDIO
-	volume = syshud_wp->volume;
+	int volume = syshud_wp->volume;
 	muted = syshud_wp->muted;
 	#endif
 
@@ -279,12 +282,10 @@ void syshud::audio_server() {
 	}
 
 	if (audio_in != nullptr || audio_out != nullptr) {
-		// Pulse waiting for an update be like: https://tenor.com/view/mr-bean-waiting-still-waiting-gif-13052487
-		// TODO: Either deprecate or improve pulse audio.
 		#ifdef PULSEAUDIO
-		pa = PulseAudio();
-		if (pa.initialize() != 0)
-			quit(0);
+		pa = new PulseAudio(audio_out);
+		if (pa->initialize() != 0)
+			pa->quit(0);
 		#else
 		syshud_wp = new syshud_wireplumber(audio_in, audio_out);
 		#endif
