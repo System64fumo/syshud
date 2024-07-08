@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
 	#endif
 
 	#ifdef CONFIG_FILE
-	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/hud.conf");
+	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/hud/config.conf");
 
 	std::string cfg_position = config.get_value("main", "position");
 	if (!cfg_position.empty())
