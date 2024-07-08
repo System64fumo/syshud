@@ -30,7 +30,7 @@ make PULSEAUDIO=1
 
 # Theming
 syshud uses your gtk4 theme by default, However it can be also load custom css,<br>
-Just copy the included hud.css file to ~/.config/sys64/hud.css<br>
+Just copy the included style.css file to ~/.config/sys64/hud/style.css<br>
 
 # Credits
 [Jason White](https://gist.github.com/jasonwhite/1df6ee4b5039358701d2) for showing how to write pulseaudio stuff<br>
