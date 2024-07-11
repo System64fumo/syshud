@@ -4,12 +4,8 @@
 #define RUNTIME_CONFIG					// Allow the use of runtime arguments
 #define CONFIG_FILE						// Allow the use of a config file
 
-/*
-	Default config.
-	Can be configured instead of using launch arguments.
-*/
-
-inline struct config {
+// Default config
+struct config {
 	std::string position = "bottom";
 	char orientation = 'h';
 	int width = 300;
@@ -21,4 +17,4 @@ inline struct config {
 	int transition_time = 250;
 	std::string backlight_path = "";
 	std::string monitors = "audio_in,audio_out,brightness";
-} config_main;
+};

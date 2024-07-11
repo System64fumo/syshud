@@ -1,14 +1,15 @@
 #include "main.hpp"
 #include "window.hpp"
 #include "css.hpp"
-#include "config.hpp"
 
 #include <gtk4-layer-shell.h>
 #include <filesystem>
 #include <iostream>
 #include <thread>
 
-syshud::syshud() {
+syshud::syshud(const config &cfg) {
+	config_main = cfg;
+
 	// Initialize layer shell
 	gtk_layer_init_for_window(gobj());
 	gtk_layer_set_namespace(gobj(), "syshud");
@@ -27,12 +28,12 @@ syshud::syshud() {
 	if ((edge_top && edge_bottom) || (edge_right && edge_left)) {
 		std::cerr << "Verry funny arguments you got there" << std::endl;
 		std::cerr << "Would be a shame if.. The program crashed right?" << std::endl;
-		app->quit();
+		exit(1);
 	}
 	else if (!edge_top && !edge_right && !edge_bottom && !edge_left) {
 		std::cerr << "You sure you specified valid arguments?" << std::endl;
 		std::cerr << "Valid arguments: \"top right bottom left\"" << std::endl;
-		app->quit();
+		exit(1);
 	}
 
 	// Initialize
@@ -309,4 +310,10 @@ bool syshud::timer() {
 	else
 		timeout--;
 	return true;
+}
+
+extern "C" {
+	syshud *syshud_create(const config &cfg) {
+		return new syshud(cfg);
+	}
 }

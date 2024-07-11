@@ -3,15 +3,23 @@
 #include "config_parser.hpp"
 #include "git_info.hpp"
 
+#include <gtkmm/application.h>
 #include <iostream>
 #include <signal.h>
+#include <dlfcn.h>
 
+// TODO: Fix cleanup code
+// ATM it segfaults which is not a real issue but should be resolved nonetheless
+// Replace app->quit() with exit(0); ?
 void quit(int signum) {
+	delete win;
+	auto app = win->get_application();
+
+	// Disconnect Audio servers
 	#ifdef PULSEAUDIO
-	// Disconnect pulseaudio
 	win->pa->quit(0);
 	#else
-	delete(win->syshud_wp);
+	delete win->syshud_wp;
 	#endif
 
 	// Remove window
@@ -20,7 +28,25 @@ void quit(int signum) {
 	app->quit();
 }
 
+void load_libsyshud() {
+	void* handle = dlopen("libsyshud.so", RTLD_LAZY);
+	if (!handle) {
+		std::cerr << "Cannot open library: " << dlerror() << '\n';
+		exit(1);
+	}
+
+	syshud_create_ptr = (syshud_create_func)dlsym(handle, "syshud_create");
+
+	if (!syshud_create_ptr) {
+		std::cerr << "Cannot load symbols: " << dlerror() << '\n';
+		dlclose(handle);
+		exit(1);
+	}
+}
+
 int main(int argc, char* argv[]) {
+	config config_main;
+
 	#ifdef RUNTIME_CONFIG
 	// Read launch arguments
 	while (true) {
@@ -154,9 +180,11 @@ int main(int argc, char* argv[]) {
 
 	signal(SIGINT, quit);
 
-	app = Gtk::Application::create("funky.sys64.syshud");
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
-	win = new syshud();
+
+	load_libsyshud();
+	win = syshud_create_ptr(config_main);
 
 	return app->run();
 }
