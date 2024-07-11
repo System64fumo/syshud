@@ -1,4 +1,3 @@
-#include "main.hpp"
 #include "pulse.hpp"
 #include <iostream>
 

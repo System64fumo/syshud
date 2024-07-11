@@ -1,4 +1,3 @@
-#include "main.hpp"
 #include "window.hpp"
 #include "css.hpp"
 
