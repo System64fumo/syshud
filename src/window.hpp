@@ -8,6 +8,8 @@
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
 
+#include "config.hpp"
+
 #ifdef PULSEAUDIO
 #include "pulse.hpp"
 #else
@@ -19,7 +21,8 @@
 class syshud : public Gtk::Window {
 
 	public:
-		syshud();
+		syshud(const config &cfg);
+
 		sigc::connection timeout_connection;
 		Gtk::Revealer revealer_box;
 
@@ -32,10 +35,12 @@ class syshud : public Gtk::Window {
 
 
 	private:
+		config config_main;
 		bool muted;
 		bool first_run = false;
 		bool timer_ticking = false;
 		std::string previous_class;
+		int timeout = 1;
 
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;
@@ -53,3 +58,7 @@ class syshud : public Gtk::Window {
 		void audio_server();
 		bool timer();
 };
+
+extern "C" {
+	syshud *syshud_create(const config &cfg);
+}
