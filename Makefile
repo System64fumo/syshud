@@ -23,7 +23,7 @@ LDFLAGS = $(shell pkg-config --libs $(PKGS))
 all: $(EXEC) $(LIB)
 
 install: $(EXEC)
-	mkdir -p $(DESTDIR)/bin
+	mkdir -p $(DESTDIR)/bin $(DESTDIR)/lib
 	install $(EXEC) $(DESTDIR)/bin/$(EXEC)
 	install $(LIB) $(DESTDIR)/lib/$(LIB)
 
@@ -39,7 +39,7 @@ $(EXEC): src/main.cpp src/config_parser.o src/git_info.hpp
 
 $(LIB): $(OBJS)
 	$(CXX) -o $(LIB) \
-	$(OBJS) \
+	$(filter-out src/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
 	-shared
 
