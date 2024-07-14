@@ -6,7 +6,7 @@
 #include <iostream>
 #include <thread>
 
-syshud::syshud(const config &cfg) {
+syshud::syshud(const config_hud &cfg) {
 	config_main = cfg;
 
 	// Initialize layer shell
@@ -312,7 +312,7 @@ bool syshud::timer() {
 }
 
 extern "C" {
-	syshud *syshud_create(const config &cfg) {
+	syshud *syshud_create(const config_hud &cfg) {
 		return new syshud(cfg);
 	}
 }
