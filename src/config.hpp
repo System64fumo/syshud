@@ -5,7 +5,7 @@
 #define CONFIG_FILE						// Allow the use of a config file
 
 // Default config
-struct config {
+struct config_hud {
 	std::string position = "bottom";
 	char orientation = 'h';
 	int width = 300;

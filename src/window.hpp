@@ -21,7 +21,7 @@
 class syshud : public Gtk::Window {
 
 	public:
-		syshud(const config &cfg);
+		syshud(const config_hud &cfg);
 
 		sigc::connection timeout_connection;
 		Gtk::Revealer revealer_box;
@@ -35,7 +35,7 @@ class syshud : public Gtk::Window {
 
 
 	private:
-		config config_main;
+		config_hud config_main;
 		bool muted;
 		bool first_run = false;
 		bool timer_ticking = false;
@@ -60,5 +60,5 @@ class syshud : public Gtk::Window {
 };
 
 extern "C" {
-	syshud *syshud_create(const config &cfg);
+	syshud *syshud_create(const config_hud &cfg);
 }
