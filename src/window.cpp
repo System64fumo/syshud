@@ -36,6 +36,7 @@ syshud::syshud(const config_hud &cfg) {
 	}
 
 	// Initialize
+	set_name("syshud");
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
 	std::thread audio_thread(&syshud::audio_server, this);
