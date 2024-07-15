@@ -1,7 +1,7 @@
 #pragma once
 #include "window.hpp"
 
-config config_main;
+config_hud config_main;
 syshud* win;
 
 typedef syshud* (*syshud_create_func)(const config_hud &cfg);
