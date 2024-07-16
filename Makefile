@@ -1,7 +1,7 @@
 EXEC = syshud
 LIB = libsyshud.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0
-SRCS =	$(filter-out src/main.cpp, $(wildcard src/*.cpp))
+SRCS = $(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DESTDIR = $(HOME)/.local
 
@@ -28,23 +28,23 @@ install: $(EXEC)
 	install $(LIB) $(DESTDIR)/lib/$(LIB)
 
 clean:
-	rm $(EXEC) $(LIB) $(SRCS:.cpp=.o) src/git_info.hpp
+	rm $(EXEC) $(LIB) $(OBJS) src/git_info.hpp
 
-$(EXEC): src/main.cpp src/config_parser.o src/git_info.hpp
+$(EXEC): $(OBJS) src/git_info.hpp
 	$(CXX) -o $(EXEC) \
-	src/main.cpp \
+	src/main.o \
 	src/config_parser.o \
 	$(LDFLAGS) \
 	$(CXXFLAGS)
 
 $(LIB): $(OBJS)
 	$(CXX) -o $(LIB) \
-	$(filter-out src/config_parser.o, $(OBJS)) \
+	$(filter-out src/main.o src/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
 	-shared
 
 %.o: %.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@ \
+	$(CXX) -c $< -o $@ \
 	$(CXXFLAGS)
 
 src/git_info.hpp:
