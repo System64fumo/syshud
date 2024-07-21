@@ -1,6 +1,5 @@
 #include "css.hpp"
 
-#include <gtkmm/eventcontrollerkey.h>
 #include <filesystem>
 
 css_loader::css_loader(std::string path, Gtk::Window *window) {

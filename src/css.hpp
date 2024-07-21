@@ -1,3 +1,4 @@
+#pragma once
 #include <gtkmm/window.h>
 #include <gtkmm/cssprovider.h>
 

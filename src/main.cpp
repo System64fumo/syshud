@@ -17,7 +17,8 @@ void quit(int signum) {
 
 	// Disconnect Audio servers
 	#ifdef PULSEAUDIO
-	win->pa->quit(0);
+	// TODO: Fix this? undefined reference to `PulseAudio::~PulseAudio()'
+	//delete win->pa;
 	#else
 	delete win->syshud_wp;
 	#endif

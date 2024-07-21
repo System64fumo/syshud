@@ -1,5 +1,4 @@
 #pragma once
-
 #include <glibmm/dispatcher.h>
 #include <gtkmm/window.h>
 #include <gtkmm/scale.h>
@@ -15,7 +14,6 @@
 #else
 #include "wireplumber.hpp"
 #endif
-
 #include "backlight.hpp"
 
 class syshud : public Gtk::Window {
