@@ -3,29 +3,14 @@
 #include "config_parser.hpp"
 #include "git_info.hpp"
 
-#include <gtkmm/application.h>
 #include <iostream>
 #include <signal.h>
 #include <dlfcn.h>
 
-// TODO: Fix cleanup code
-// ATM it segfaults which is not a real issue but should be resolved nonetheless
-// Replace app->quit() with exit(0); ?
 void quit(int signum) {
-	delete win;
-	auto app = win->get_application();
-
-	// Disconnect Audio servers
-	#ifdef PULSEAUDIO
-	// TODO: Fix this? undefined reference to `PulseAudio::~PulseAudio()'
-	//delete win->pa;
-	#else
-	delete win->syshud_wp;
-	#endif
-
-	// Remove window
-	app->release();
 	app->remove_window(*win);
+	delete win;
+	app->release();
 	app->quit();
 }
 
@@ -179,7 +164,7 @@ int main(int argc, char* argv[]) {
 	#endif
 
 	// Load the application
-	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("funky.sys64.syshud");
+	app = Gtk::Application::create("funky.sys64.syshud");
 	app->hold();
 
 	load_libsyshud();

@@ -20,6 +20,7 @@ class syshud : public Gtk::Window {
 
 	public:
 		syshud(const config_hud &cfg);
+		~syshud();
 
 		sigc::connection timeout_connection;
 		Gtk::Revealer revealer_box;
