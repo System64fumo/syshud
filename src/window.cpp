@@ -159,6 +159,14 @@ syshud::syshud(const config_hud &cfg) {
 	css_loader loader(css_path, this);
 }
 
+syshud::~syshud() {
+	#ifdef PULSEAUDIO
+	delete pa;
+	#else
+	delete syshud_wp;
+	#endif
+}
+
 void syshud::on_change(const char &reason, const int &value) {
 	timeout_connection.disconnect();
 

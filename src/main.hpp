@@ -1,6 +1,9 @@
 #pragma once
 #include "window.hpp"
 
+#include <gtkmm/application.h>
+
+Glib::RefPtr<Gtk::Application> app;
 config_hud config_main;
 syshud* win;
 
