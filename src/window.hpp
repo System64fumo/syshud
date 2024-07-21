@@ -34,7 +34,7 @@ class syshud : public Gtk::Window {
 
 	private:
 		config_hud config_main;
-		bool muted;
+		bool muted = false;
 		bool first_run = false;
 		bool timer_ticking = false;
 		std::string previous_class;
@@ -53,7 +53,7 @@ class syshud : public Gtk::Window {
 		void on_change(const char &reason, const int &value);
 		void on_audio_callback(const bool &input);
 		void on_backlight_callback();
-		void audio_server();
+		void setup_monitors();
 		bool timer();
 };
 

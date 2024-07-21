@@ -39,8 +39,8 @@ syshud::syshud(const config_hud &cfg) {
 	set_name("syshud");
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
-	std::thread audio_thread(&syshud::audio_server, this);
-	audio_thread.detach();
+	std::thread monitor_thread(&syshud::setup_monitors, this);
+	monitor_thread.detach();
 
 	// Set layout
 	if (config_main.orientation == 'h') {
@@ -155,8 +155,7 @@ syshud::syshud(const config_hud &cfg) {
 	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
 
 	// Load custom css
-	std::string home_dir = getenv("HOME");
-	std::string css_path = home_dir + "/.config/sys64/hud/style.css";
+	std::string css_path = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
 	css_loader loader(css_path, this);
 }
 
@@ -238,9 +237,7 @@ void syshud::on_audio_callback(const bool &input) {
 	#ifdef PULSEAUDIO
 	int volume = pa->volume;
 	muted = pa->muted;
-	#endif
-
-	#ifndef PULSEAUDIO
+	#else
 	int volume = syshud_wp->volume;
 	muted = syshud_wp->muted;
 	#endif
@@ -260,7 +257,7 @@ void syshud::on_backlight_callback() {
 	on_change('b', backlight->get_brightness());
 }
 
-void syshud::audio_server() {
+void syshud::setup_monitors() {
 	std::istringstream iss(config_main.monitors);
 	std::string monitor;
 
@@ -286,7 +283,7 @@ void syshud::audio_server() {
 		#ifdef PULSEAUDIO
 		pa = new PulseAudio(audio_out);
 		if (pa->initialize() != 0)
-			pa->quit(0);
+			delete pa;
 		#else
 		syshud_wp = new syshud_wireplumber(audio_in, audio_out);
 		#endif

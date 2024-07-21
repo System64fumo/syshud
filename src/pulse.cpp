@@ -5,30 +5,33 @@
 
 const char* default_sink;
 
-PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) : mainloop(NULL), mainloop_api(NULL), context(NULL), signal(NULL) {
+PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) {
 	this->output_callback = output_callback;
 }
 
 int PulseAudio::initialize() {
-		int ret = 1;
-		mainloop = pa_mainloop_new();
-		mainloop_api = pa_mainloop_get_api(mainloop);
-		pa_signal_init(mainloop_api);
-		context = pa_context_new(mainloop_api, "syshud");
-		ret = pa_context_connect(context, NULL, PA_CONTEXT_NOAUTOSPAWN, NULL);
-		if (ret < 0)
-			return ret;
-
-		pa_context_set_state_callback(context, context_state_callback, this);
-		pa_mainloop_run(mainloop, &ret);
+	int ret = 1;
+	mainloop = pa_mainloop_new();
+	mainloop_api = pa_mainloop_get_api(mainloop);
+	pa_signal_init(mainloop_api);
+	context = pa_context_new(mainloop_api, "syshud");
+	ret = pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
+	if (ret < 0)
 		return ret;
+
+	pa_context_set_state_callback(context, context_state_callback, this);
+	pa_mainloop_run(mainloop, &ret);
+	return ret;
 }
 
 void PulseAudio::quit(int ret = 0) {
 	mainloop_api->quit(mainloop_api, ret);
 }
 
-void PulseAudio::destroy() {
+PulseAudio::~PulseAudio() {
+	quit(0);
+
+	// Cleanup
 	if (context) {
 		pa_context_unref(context);
 		context = NULL;
@@ -45,11 +48,6 @@ void PulseAudio::destroy() {
 		mainloop = NULL;
 		mainloop_api = NULL;
 	}
-}
-
-PulseAudio::~PulseAudio() {
-	quit(0);
-	destroy();
 }
 
 void PulseAudio::exit_signal_callback(pa_mainloop_api *m, pa_signal_event *e, int sig, void *userdata) {

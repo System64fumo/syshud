@@ -6,15 +6,14 @@ class PulseAudio {
 	public:
 		PulseAudio(Glib::Dispatcher* output_callback);
 		~PulseAudio();
+		int initialize();
 
 		int volume;
 		bool muted;
 
-		int initialize();
-		void quit(int ret);
-		void destroy();
-
 	private:
+		void quit(int ret);
+
 		pa_mainloop* mainloop;
 		pa_mainloop_api* mainloop_api;
 		pa_context* context;
