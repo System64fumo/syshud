@@ -8,7 +8,9 @@ config_parser::config_parser(const std::string &filename) {
 	std::string line;
 	std::string current_section;
 
-	if (file.is_open()) {
+	available = file.is_open();
+
+	if (available) {
 		while (std::getline(file, line)) {
 			line = trim(line);
 
