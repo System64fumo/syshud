@@ -35,51 +35,51 @@ int main(int argc, char* argv[]) {
 	#ifdef CONFIG_FILE
 	config_parser config(std::string(getenv("HOME")) + "/.config/sys64/hud/config.conf");
 
-	std::string cfg_position = config.get_value("main", "position");
-	if (!cfg_position.empty())
-		config_main.position = cfg_position;
+	if (config.available) {
+		std::string cfg_position = config.get_value("main", "position");
+		if (cfg_position != "empty")
+			config_main.position = cfg_position;
 
-	std::string cfg_orientation = config.get_value("main", "orientation");
-	if (!cfg_orientation.empty())
-		config_main.orientation = cfg_orientation[0];
+		std::string cfg_orientation = config.get_value("main", "orientation");
+		if (cfg_orientation != "empty")
+			config_main.orientation = cfg_orientation[0];
 
-	std::string cfg_width = config.get_value("main", "width");
-	if (!cfg_width.empty())
-		config_main.width = std::stoi(cfg_width);
+		std::string cfg_width = config.get_value("main", "width");
+		if (cfg_width != "empty")
+			config_main.width = std::stoi(cfg_width);
 
-	std::string cfg_height = config.get_value("main", "height");
-	if (!cfg_height.empty())
-		config_main.height = std::stoi(cfg_height);
+		std::string cfg_height = config.get_value("main", "height");
+		if (cfg_height != "empty")
+			config_main.height = std::stoi(cfg_height);
 
-	std::string cfg_icon_size = config.get_value("main", "icon_size");
-	if (!cfg_icon_size.empty())
-		config_main.icon_size = std::stoi(cfg_icon_size);
+		std::string cfg_icon_size = config.get_value("main", "icon_size");
+		if (cfg_icon_size != "empty")
+			config_main.icon_size = std::stoi(cfg_icon_size);
 
-	std::string cfg_percentage = config.get_value("main", "percentage");
-	if (cfg_percentage == "true")
-		config_main.show_percentage = true;
-	else if (cfg_percentage == "false")
-		config_main.show_percentage = false;
+		std::string cfg_percentage = config.get_value("main", "percentage");
+		if (cfg_percentage != "empty")
+			config_main.show_percentage = (cfg_percentage == "true");
 
-	std::string cfg_margins = config.get_value("main", "margins");
-	if (!cfg_margins.empty())
-		config_main.margins = cfg_margins;
+		std::string cfg_margins = config.get_value("main", "margins");
+		if (cfg_margins != "empty")
+			config_main.margins = cfg_margins;
 
-	std::string cfg_timeout = config.get_value("main", "timeout");
-	if (!cfg_timeout.empty())
-		config_main.desired_timeout = std::stoi(cfg_timeout);
+		std::string cfg_timeout = config.get_value("main", "timeout");
+		if (cfg_timeout != "empty")
+			config_main.desired_timeout = std::stoi(cfg_timeout);
 
-	std::string cfg_transition = config.get_value("main", "transition");
-	if (!cfg_transition.empty())
-		config_main.transition_time = std::stoi(cfg_transition);
+		std::string cfg_transition = config.get_value("main", "transition");
+		if (cfg_transition != "empty")
+			config_main.transition_time = std::stoi(cfg_transition);
 
-	std::string cfg_backlight = config.get_value("main", "backlight");
-	if (cfg_backlight != "empty")
-		config_main.backlight_path = cfg_backlight;
+		std::string cfg_backlight = config.get_value("main", "backlight");
+		if (cfg_backlight != "empty" && !cfg_backlight.empty())
+			config_main.backlight_path = cfg_backlight;
 
-	std::string cfg_monitors = config.get_value("main", "monitors");
-	if (!cfg_monitors.empty())
-		config_main.monitors = cfg_monitors;
+		std::string cfg_monitors = config.get_value("main", "monitors");
+		if (cfg_monitors != "empty")
+			config_main.monitors = cfg_monitors;
+	}
 	#endif
 
 	// Read launch arguments
