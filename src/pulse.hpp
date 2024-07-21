@@ -3,24 +3,23 @@
 #include <glibmm/dispatcher.h>
 
 class PulseAudio {
+	public:
+		PulseAudio(Glib::Dispatcher* output_callback);
+		~PulseAudio();
+
+		int volume;
+		bool muted;
+
+		int initialize();
+		void quit(int ret);
+		void destroy();
+
 	private:
 		pa_mainloop* mainloop;
 		pa_mainloop_api* mainloop_api;
 		pa_context* context;
 		pa_signal_event* signal;
 
-	public:
-		PulseAudio(Glib::Dispatcher* output_callback);
-
-	int volume;
-	bool muted;
-
-	int initialize();
-	void quit(int ret);
-	void destroy();
-	~PulseAudio();
-
-	private:
 		int previous_volume;
 		bool previous_muted;
 		Glib::Dispatcher* output_callback;

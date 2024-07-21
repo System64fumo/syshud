@@ -1,5 +1,7 @@
 #include "pulse.hpp"
+
 #include <iostream>
+#include <math.h>
 
 const char* default_sink;
 
@@ -46,6 +48,7 @@ void PulseAudio::destroy() {
 }
 
 PulseAudio::~PulseAudio() {
+	quit(0);
 	destroy();
 }
 
