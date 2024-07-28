@@ -30,7 +30,7 @@ install: $(EXEC)
 clean:
 	rm $(EXEC) $(LIB) $(OBJS) src/git_info.hpp
 
-$(EXEC): $(OBJS) src/git_info.hpp
+$(EXEC): src/git_info.hpp $(OBJS)
 	$(CXX) -o $(EXEC) \
 	src/main.o \
 	src/config_parser.o \
