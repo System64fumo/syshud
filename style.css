@@ -68,13 +68,13 @@
 }
 
 /* Levels */
-#syshud .over {
-}
-#syshud .high {
-}
-#syshud .medium {
+#syshud .muted {
 }
 #syshud .low {
 }
-#syshud .off {
+#syshud .medium {
 }
+#syshud .high {
+}
+
+
