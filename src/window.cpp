@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <thread>
+#include <algorithm>
 
 syshud::syshud(const config_hud &cfg) {
 	config_main = cfg;
@@ -218,16 +219,14 @@ void syshud::on_change(const char &reason, const int &value) {
 	}
 
 	// Set appropiate class
-	if (value < 100) {
-		get_style_context()->remove_class(previous_class);
-		if (muted) {
-			previous_class = value_levels[0];
-		}
-		else {
-			previous_class = value_levels[value / 34 + 1];
-		}
-		get_style_context()->add_class(previous_class);
+	box_layout.get_style_context()->remove_class(previous_class);
+	if (muted && reason !=  'b') {
+		previous_class = value_levels[0];
 	}
+	else {
+		previous_class = value_levels[std::clamp(value, 0, 100) / 34 + 1];
+	}
+	box_layout.get_style_context()->add_class(previous_class);
 
 	// Set the appropiate icon
 	if (!icon.empty())
