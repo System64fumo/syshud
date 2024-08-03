@@ -16,9 +16,11 @@ else
 	OBJS := $(filter-out src/pulse.o,$(OBJS))
 endif
 
-CXXFLAGS += -march=native -mtune=native -Os -s -Wall -flto=auto -fno-exceptions -fPIC
+CXXFLAGS += -Os -s -Wall -flto=auto -fno-exceptions -fPIC
+LDFLAGS += -Wl,-O1,--as-needed,-z,now,-z,pack-relative-relocs
+
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS = $(shell pkg-config --libs $(PKGS))
+LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
 all: $(EXEC) $(LIB)
 
@@ -30,17 +32,18 @@ install: $(EXEC)
 clean:
 	rm $(EXEC) $(LIB) $(OBJS) src/git_info.hpp
 
-$(EXEC): src/git_info.hpp $(OBJS)
+$(EXEC): src/git_info.hpp src/main.o src/config_parser.o
 	$(CXX) -o $(EXEC) \
 	src/main.o \
 	src/config_parser.o \
-	$(LDFLAGS) \
-	$(CXXFLAGS)
+	$(CXXFLAGS) \
+	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIB): $(OBJS)
 	$(CXX) -o $(LIB) \
 	$(filter-out src/main.o src/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
+	$(LDFLAGS) \
 	-shared
 
 %.o: %.cpp
