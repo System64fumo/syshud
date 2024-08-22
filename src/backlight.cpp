@@ -48,7 +48,8 @@ syshud_backlight::syshud_backlight(Glib::Dispatcher* callback, std::string custo
 		char buffer[1024];
 
 		while (true) {
-			read(inotify_fd, buffer, 1024);
+			ssize_t ret = read(inotify_fd, buffer, 1024);
+			(void)ret; // Return value does not matter
 
 			int brightness = get_brightness();
 			if (brightness != last_brightness) {
