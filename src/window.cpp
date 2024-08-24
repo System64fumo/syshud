@@ -156,8 +156,15 @@ syshud::syshud(const config_hud &cfg) {
 	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
 
 	// Load custom css
-	std::string css_path = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
-	css_loader loader(css_path, this);
+	std::string style_path;
+	if (std::filesystem::exists(std::string(getenv("HOME")) + "/.config/sys64/hud/style.css"))
+		style_path = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
+	else if (std::filesystem::exists("/usr/share/sys64/hud/style.css"))
+		style_path = "/usr/share/sys64/hud/style.css";
+	else
+		style_path = "/usr/local/share/sys64/hud/style.css";
+
+	css_loader loader(style_path, this);
 }
 
 syshud::~syshud() {
