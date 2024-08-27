@@ -29,12 +29,15 @@ int syshud_backlight::get_brightness() {
 	std::lock_guard<std::mutex> lock(brightness_mutex);
 	std::ifstream brightness_file(backlight_path + "/brightness");
 	std::ifstream max_brightness_file(backlight_path + "/max_brightness");
-	double brightness;
-	double max_brightness;
 	brightness_file >> brightness;
 	max_brightness_file >> max_brightness;
 
 	return (brightness / max_brightness) * 100;
+}
+
+void syshud_backlight::set_brightness(const double &value) {
+	std::ofstream backlight_file(backlight_path + "/brightness", std::ios::trunc);
+	backlight_file << (max_brightness / value);
 }
 
 syshud_backlight::syshud_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
