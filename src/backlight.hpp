@@ -8,8 +8,12 @@ class syshud_backlight {
 		~syshud_backlight();
 
 		int get_brightness();
+		void set_brightness(const double &value);
 
 	private:
+		double brightness;
+		double max_brightness;
+
 		int inotify_fd;
 		std::string backlight_path;
 		std::mutex brightness_mutex;
