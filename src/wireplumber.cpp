@@ -70,13 +70,13 @@ void syshud_wireplumber::onDefaultNodesApiChanged(syshud_wireplumber* self) {
 	wp_object_manager_lookup(self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY,
 							 "bound-id", "=u", self->input_node_id, nullptr));
 
-	const gchar* output_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
-	const gchar* input_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+	self->output_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+	self->input_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
 
 	std::cout << "Audio device changed"<< std::endl;
-	std::cout << "Output: " << output_node_name << std::endl;
+	std::cout << "Output: " << self->output_node_name << std::endl;
 	std::cout << "Output ID: " << self->node_id << std::endl;
-	std::cout << "Output: " << input_node_name << std::endl;
+	std::cout << "Output: " << self->input_node_name << std::endl;
 	std::cout << "Output ID: " << self->input_node_id << std::endl;
 }
 
@@ -163,6 +163,8 @@ void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 	g_signal_connect_swapped(self->mixer_api, "changed", (GCallback)onMixerChanged, self);
 	g_signal_connect_swapped(self->def_nodes_api, "changed", (GCallback)onDefaultNodesApiChanged,
 							 self);
+
+	onDefaultNodesApiChanged(self);
 }
 
 syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) {

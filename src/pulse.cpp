@@ -3,8 +3,6 @@
 #include <iostream>
 #include <math.h>
 
-const char* default_sink;
-
 PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) {
 	this->output_callback = output_callback;
 }
@@ -103,7 +101,7 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 	if (!i)
 		return;
 
-	if (strcmp(i->name, default_sink))
+	if (strcmp(i->name, pa->default_sink))
 		return;
 
 	// Set new values
@@ -120,6 +118,11 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 }
 
 void PulseAudio::server_info_callback(pa_context *c, const pa_server_info *i, void *userdata) {
-	default_sink = i->default_sink_name;
+	PulseAudio* pa = (PulseAudio*)userdata;
+	pa->default_sink = i->default_sink_name;
+	pa->default_source = i->default_source_name;
+	std::printf("Output: %s\n", i->default_sink_name);
+	std::printf("Input: %s\n", i->default_source_name);
+	
 	pa_context_get_sink_info_by_name(c, i->default_sink_name, sink_info_callback, userdata);
 }
