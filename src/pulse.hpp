@@ -10,8 +10,8 @@ class PulseAudio {
 
 		int volume;
 		bool muted;
-		const char* default_sink;
-		const char* default_source;
+		const char* output_name;
+		const char* input_name;
 
 	private:
 		void quit(int ret);

@@ -1,6 +1,5 @@
 #include "pulse.hpp"
 
-#include <iostream>
 #include <math.h>
 
 PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) {
@@ -74,7 +73,7 @@ void PulseAudio::context_state_callback(pa_context *c, void *userdata) {
 
 		case PA_CONTEXT_FAILED:
 		default:
-			std::cerr << "PulseAudio failed to connect." << std::endl;
+			std::fprintf(stderr, "PulseAudio failed to connect.\n");
 				pa->quit(1);
 			break;
 	}
@@ -101,7 +100,7 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 	if (!i)
 		return;
 
-	if (strcmp(i->name, pa->default_sink))
+	if (strcmp(i->name, pa->output_name))
 		return;
 
 	// Set new values
@@ -119,8 +118,8 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 
 void PulseAudio::server_info_callback(pa_context *c, const pa_server_info *i, void *userdata) {
 	PulseAudio* pa = (PulseAudio*)userdata;
-	pa->default_sink = i->default_sink_name;
-	pa->default_source = i->default_source_name;
+	pa->output_name = i->default_sink_name;
+	pa->input_name = i->default_source_name;
 	std::printf("Output: %s\n", i->default_sink_name);
 	std::printf("Input: %s\n", i->default_source_name);
 	
