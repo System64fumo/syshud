@@ -3,9 +3,7 @@
 
 #include <gtk4-layer-shell.h>
 #include <filesystem>
-#include <iostream>
 #include <thread>
-#include <algorithm>
 
 syshud::syshud(const config_hud &cfg) {
 	config_main = cfg;
@@ -26,13 +24,13 @@ syshud::syshud(const config_hud &cfg) {
 	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, edge_left);
 
 	if ((edge_top && edge_bottom) || (edge_right && edge_left)) {
-		std::cerr << "Verry funny arguments you got there" << std::endl;
-		std::cerr << "Would be a shame if.. The program crashed right?" << std::endl;
+		std::fprintf(stderr, "Verry funny arguments you got there\n");
+		std::fprintf(stderr, "Would be a shame if.. The program crashed right?\n");
 		exit(1);
 	}
 	else if (!edge_top && !edge_right && !edge_bottom && !edge_left) {
-		std::cerr << "You sure you specified valid arguments?" << std::endl;
-		std::cerr << "Valid arguments: \"top right bottom left\"" << std::endl;
+		std::fprintf(stderr, "You sure you specified valid arguments?\n");
+		std::fprintf(stderr, "Valid arguments: \"top right bottom left\"\n");
 		exit(1);
 	}
 
@@ -40,8 +38,7 @@ syshud::syshud(const config_hud &cfg) {
 	set_name("syshud");
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
-	std::thread monitor_thread(&syshud::setup_monitors, this);
-	monitor_thread.detach();
+	std::thread(&syshud::setup_monitors, this).detach();
 
 	// Set layout
 	if (config_main.orientation == 'h') {
@@ -104,23 +101,26 @@ syshud::syshud(const config_hud &cfg) {
 		}
 	}
 	else {
-		std::cerr << "Unknown orientation: " << config_main.orientation << std::endl;
+		std::fprintf(stderr, "Unknown orientation: %d\n", config_main.orientation);
 		return;
 	}
 
 	// Set margins
 	std::istringstream iss(config_main.margins);
-	std::string margin;
+	std::string margin_str;
 	int count = 0;
-	while (std::getline(iss, margin, ' ')) {
+
+	while (std::getline(iss, margin_str, ' ')) {
+		int margin = std::stoi(margin_str);
+
 		if (count == 0)
-			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_TOP, std::stoi(margin));
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_TOP, margin);
 		else if (count == 1)
-			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, std::stoi(margin));
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_RIGHT, margin);
 		else if  (count == 2)
-			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, std::stoi(margin));
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_BOTTOM, margin);
 		else if (count == 3)
-			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, std::stoi(margin));
+			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, margin);
 		count++;
 	}
 
@@ -190,7 +190,9 @@ void syshud::on_change(const char &reason, const int &value) {
 		Glib::signal_timeout().connect(sigc::mem_fun(*this, &syshud::timer), 1000);
 	}
 
-	std::string icon;
+	// Check if we should draw the icons or not
+	if (config_main.icon_size == 0)
+		return;
 
 	// Map
 	std::map<int, std::string> value_levels = {
@@ -200,10 +202,7 @@ void syshud::on_change(const char &reason, const int &value) {
 		{3, "high"},
 	};
 
-	// Check if we should draw the icons or not
-	if (config_main.icon_size == 0)
-		return;
-
+	std::string icon;
 	if (reason == 'b') {
 		if (value == 0)
 			icon = "display-brightness-off-symbolic";
@@ -227,17 +226,16 @@ void syshud::on_change(const char &reason, const int &value) {
 
 	// Set appropiate class
 	box_layout.get_style_context()->remove_class(previous_class);
-	if (muted && reason !=  'b') {
+
+	if (muted && reason !=  'b')
 		previous_class = value_levels[0];
-	}
-	else {
+	else
 		previous_class = value_levels[std::clamp(value, 0, 100) / 34 + 1];
-	}
+
 	box_layout.get_style_context()->add_class(previous_class);
 
 	// Set the appropiate icon
-	if (!icon.empty())
-		image_volume.set_from_icon_name(icon);
+	image_volume.set_from_icon_name(icon);
 
 	// Set the appropiate value
 	scale_volume.set_value(value);
@@ -289,7 +287,7 @@ void syshud::setup_monitors() {
 			backlight = new syshud_backlight(&dispatcher_backlight, config_main.backlight_path);
 		}
 		else {
-			std::cerr << "Unknown monitor: " << monitor << std::endl;
+			std::fprintf(stderr, "Unknown monitor: %s\n", monitor.c_str());
 		}
 	}
 

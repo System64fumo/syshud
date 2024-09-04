@@ -9,8 +9,8 @@ class syshud_wireplumber {
 
 		int volume;
 		bool muted;
-		gchar* output_node_name;
-		gchar* input_node_name;
+		const char* output_name;
+		const char* input_name;
 
 	private:
 		Glib::Dispatcher* input_callback;
@@ -21,8 +21,8 @@ class syshud_wireplumber {
 		WpObjectManager *om;
 		int pending_plugins;
 
-		uint32_t node_id = 0;
-		uint32_t input_node_id = 0;
+		uint32_t output_id = 0;
+		uint32_t input_id = 0;
 		const gchar* node_name;
 		WpPlugin *mixer_api;
 		WpPlugin *def_nodes_api;

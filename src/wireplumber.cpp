@@ -1,6 +1,4 @@
 #include "wireplumber.hpp"
-#include <iostream>
-#include <cmath>
 
 bool syshud_wireplumber::isValidNodeId(uint32_t id) {
 	return id > 0 && id < G_MAXUINT32;
@@ -8,11 +6,9 @@ bool syshud_wireplumber::isValidNodeId(uint32_t id) {
 
 void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 	GVariant* variant = nullptr;
-	if (!isValidNodeId(id)) {
-		std::cerr << "Invalid node ID: " << id << std::endl;
-		std::cerr << "Ignoring volume update." << std::endl;
+
+	if (!isValidNodeId(id))
 		return;
-	}
 
 	g_autoptr(WpNode) node = static_cast<WpNode*>(wp_object_manager_lookup(
 				self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
@@ -21,17 +17,11 @@ void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 	if (node == nullptr)
 		return;
 
-	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
 	double temp_volume;
+	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
 	g_variant_lookup(variant, "mute", "b", &self->muted);
-	// There is supposed to be a freeup thing here,
-	// Too bad it segfaults!
-
-	if (variant == nullptr) {
-		std::cerr << "Node does not support volume\n" << std::endl;
-		return;
-	}
+	g_clear_pointer(&variant, g_variant_unref);
 
 	// Figure out if the change came from an input or output device
 	const std::string media_class = std::string(
@@ -39,7 +29,7 @@ void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 							WP_PIPEWIRE_OBJECT(node), "media.class"));
 
 	// Set values and trigger a callback
-	self->volume = round(temp_volume * 100.0);
+	self->volume = (temp_volume + 0.000001) * 100.0;
 	if (media_class == "Audio/Source") {
 		if (self->input_callback != nullptr)
 			self->input_callback->emit();
@@ -51,43 +41,30 @@ void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 }
 
 void syshud_wireplumber::onDefaultNodesApiChanged(syshud_wireplumber* self) {
-	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
-	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
-	if (!isValidNodeId(self->node_id)) {
-		std::cerr << "Invalid output node ID Ignoring volume update." << std::endl;
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->output_id);
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_id);
+
+	if (!isValidNodeId(self->output_id) || !isValidNodeId(self->input_id))
 		return;
-	}
-	if (!isValidNodeId(self->input_node_id)) {
-		std::cerr << "Invalid input node ID Ignoring volume update." << std::endl;
-		return;
-	}
 
 	g_autoptr(WpNode) output_node = static_cast<WpNode*>(
 	wp_object_manager_lookup(self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY,
-							 "bound-id", "=u", self->node_id, nullptr));
+							 "bound-id", "=u", self->output_id, nullptr));
 
 	g_autoptr(WpNode) input_node = static_cast<WpNode*>(
 	wp_object_manager_lookup(self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY,
-							 "bound-id", "=u", self->input_node_id, nullptr));
+							 "bound-id", "=u", self->input_id, nullptr));
 
-	self->output_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
-	self->input_node_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+	self->output_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
+	self->input_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(input_node), "node.name");
 
-	std::cout << "Audio device changed"<< std::endl;
-	std::cout << "Output: " << self->output_node_name << std::endl;
-	std::cout << "Output ID: " << self->node_id << std::endl;
-	std::cout << "Output: " << self->input_node_name << std::endl;
-	std::cout << "Output ID: " << self->input_node_id << std::endl;
+	std::printf("Output: %s, ID: %d\n", self->output_name, self->output_id);
+	std::printf("Input: %s, ID: %d\n", self->input_name, self->input_id);
 }
 
 void syshud_wireplumber::onPluginActivated(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
-	const auto* pluginName = wp_plugin_get_name(WP_PLUGIN(p));
-	g_autoptr(GError) error = nullptr;
-	if (wp_object_activate_finish(p, res, &error) == 0) {
-		std::cerr << "error activating plugin: " << pluginName << std::endl;
-		std::cerr << error->message << std::endl;
+	if (wp_object_activate_finish(p, res, nullptr) == 0)
 		return;
-	}
 
 	if (--self->pending_plugins == 0) {
 		wp_core_install_object_manager(self->core, self->om);
@@ -104,15 +81,8 @@ void syshud_wireplumber::activatePlugins() {
 }
 
 void syshud_wireplumber::onMixerApiLoaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
-	gboolean success = FALSE;
-	g_autoptr(GError) error = nullptr;
-
-	success = wp_core_load_component_finish(self->core, res, nullptr);
-
-	if (!success) {
-		std::cout << "Mixer API failed to load" << std::endl;
+	if (!wp_core_load_component_finish(self->core, res, nullptr))
 		return;
-	}
 
 	g_ptr_array_add(self->apis, ({
 					WpPlugin* p = wp_plugin_find(self->core, "mixer-api");
@@ -124,15 +94,8 @@ void syshud_wireplumber::onMixerApiLoaded(WpObject* p, GAsyncResult* res, syshud
 }
 
 void syshud_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
-	gboolean success = FALSE;
-	g_autoptr(GError) error = nullptr;
-
-	success = wp_core_load_component_finish(self->core, res, &error);
-
-	if (!success) {
-		std::cout << "Node API failed to load" << std::endl;
+	if (!wp_core_load_component_finish(self->core, res, nullptr))
 		return;
-	}
 
 	g_ptr_array_add(self->apis, wp_plugin_find(self->core, "default-nodes-api"));
 
@@ -142,23 +105,17 @@ void syshud_wireplumber::onDefaultNodesApiLoaded(WpObject* p, GAsyncResult* res,
 
 void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 	self->def_nodes_api = wp_plugin_find(self->core, "default-nodes-api");
-
-	if (self->def_nodes_api == nullptr) {
-		std::cerr << "Default nodes API is not loaded\n" << std::endl;
+	if (self->def_nodes_api == nullptr)
 		return;
-	}
 
 	self->mixer_api = wp_plugin_find(self->core, "mixer-api");
-
-	if (self->mixer_api == nullptr) {
-		std::cerr << "Mixer api is not loaded\n" << std::endl;
+	if (self->mixer_api == nullptr)
 		return;
-	}
 
-	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->node_id);
-	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_node_id);
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->output_id);
+	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_id);
 
-	onMixerChanged(self, self->node_id);
+	onMixerChanged(self, self->output_id);
 
 	g_signal_connect_swapped(self->mixer_api, "changed", (GCallback)onMixerChanged, self);
 	g_signal_connect_swapped(self->def_nodes_api, "changed", (GCallback)onDefaultNodesApiChanged,
@@ -170,8 +127,9 @@ void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) {
 	this->input_callback = input_callback;
 	this->output_callback = output_callback;
+
 	wp_init(WP_INIT_PIPEWIRE);
-	core = wp_core_new(NULL, NULL, NULL);
+	core = wp_core_new(nullptr, nullptr, nullptr);
 	apis = g_ptr_array_new_with_free_func(g_object_unref);
 	om = wp_object_manager_new();
 
@@ -181,7 +139,8 @@ syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::D
 								   "media.class", "=s", "Audio/Source", nullptr);
 
 	if (wp_core_connect(core) == 0) {
-		std::cout << "Could not connect" << std::endl;
+		std::fprintf(stderr, "Could not connect to wireplumber\n");
+		return;
 	}
 
 	g_signal_connect_swapped(om, "installed", (GCallback)onObjectManagerInstalled, this);
