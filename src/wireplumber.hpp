@@ -9,6 +9,8 @@ class syshud_wireplumber {
 
 		int volume;
 		bool muted;
+		gchar* output_node_name;
+		gchar* input_node_name;
 
 	private:
 		Glib::Dispatcher* input_callback;
