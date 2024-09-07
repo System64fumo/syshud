@@ -1,6 +1,6 @@
 BINS = syshud
 LIBS = libsyshud.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0
+PKGS = gtkmm-4.0 gtk4-layer-shell-0 libevdev
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 
