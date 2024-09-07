@@ -154,6 +154,7 @@ syshud::syshud(const config_hud &cfg) {
 	dispatcher_audio_in.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), true));
 	dispatcher_audio_out.connect(sigc::bind(sigc::mem_fun(*this, &syshud::on_audio_callback), false));
 	dispatcher_backlight.connect(sigc::mem_fun(*this, &syshud::on_backlight_callback));
+	dispatcher_keytoggles.connect(sigc::mem_fun(*this, &syshud::on_keytoggle_callback));
 
 	// Load custom css
 	std::string style_path;
@@ -267,6 +268,10 @@ void syshud::on_audio_callback(const bool &input) {
 
 void syshud::on_backlight_callback() {
 	on_change('b', backlight->get_brightness());
+}
+
+void syshud::on_keytoggle_callback() {
+	std::printf("Toggle changed: %c!\n", keytoggle_watcher->changed);
 }
 
 void syshud::setup_monitors() {
