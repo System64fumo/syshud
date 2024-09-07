@@ -9,10 +9,8 @@ class syshud_keytoggles {
 
 		bool caps_lock;
 		bool num_lock;
-		bool scroll_lock;
 
 		private:
 			bool caps_lock_prev;
 			bool num_lock_prev;
-			bool scroll_lock_prev;
 };

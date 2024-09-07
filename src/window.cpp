@@ -203,6 +203,7 @@ void syshud::on_change(const char &reason, const int &value) {
 		{3, "high"},
 	};
 
+	std::string label;
 	std::string icon;
 	if (reason == 'b') {
 		if (value == 0)
@@ -224,16 +225,30 @@ void syshud::on_change(const char &reason, const int &value) {
 		else
 			icon = "audio-volume-overamplified-symbolic";
 	}
+	else if (reason == 'k') {
+		if (value == 'c') {
+			label = "Caps Lock";
+			icon = keytoggle_watcher->caps_lock ? "capslock-enabled-symbolic" : "capslock-disabled-symbolic";
+		}
+		else if (value == 'n') {
+			label = "Num Lock";
+			icon = keytoggle_watcher->caps_lock ? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
+		}
+	}
 
-	// Set appropiate class
-	box_layout.get_style_context()->remove_class(previous_class);
+	if (reason != 'k') {
+		label = std::to_string(value) + "\%";
 
-	if (muted && reason !=  'b')
-		previous_class = value_levels[0];
-	else
-		previous_class = value_levels[std::clamp(value, 0, 100) / 34 + 1];
-
-	box_layout.get_style_context()->add_class(previous_class);
+		// Set appropiate class
+		box_layout.get_style_context()->remove_class(previous_class);
+	
+		if (muted && reason !=  'b')
+			previous_class = value_levels[0];
+		else
+			previous_class = value_levels[std::clamp(value, 0, 100) / 34 + 1];
+	
+		box_layout.get_style_context()->add_class(previous_class);
+	}
 
 	// Set the appropiate icon
 	image_volume.set_from_icon_name(icon);
@@ -243,7 +258,7 @@ void syshud::on_change(const char &reason, const int &value) {
 
 	// Check if we should draw the percentage
 	if (config_main.show_percentage)
-		label_volume.set_label(std::to_string(value) + "\%");
+		label_volume.set_label(label);
 }
 
 void syshud::on_audio_callback(const bool &input) {
@@ -260,6 +275,7 @@ void syshud::on_audio_callback(const bool &input) {
 			return;
 	}
 
+	scale_volume.show();
 	if (input)
 		on_change('i', volume);
 	else
@@ -267,11 +283,13 @@ void syshud::on_audio_callback(const bool &input) {
 }
 
 void syshud::on_backlight_callback() {
+	scale_volume.show();
 	on_change('b', backlight->get_brightness());
 }
 
 void syshud::on_keytoggle_callback() {
-	std::printf("Toggle changed: %c!\n", keytoggle_watcher->changed);
+	scale_volume.hide();
+	on_change('k', keytoggle_watcher->changed);
 }
 
 void syshud::setup_monitors() {
@@ -291,9 +309,8 @@ void syshud::setup_monitors() {
 		else if (monitor == "brightness") {
 			backlight = new syshud_backlight(&dispatcher_backlight, config_main.backlight_path);
 		}
-		else if (monitor == "keyboard") {
-			if (config_main.keyboard != "")
-				keytoggle_watcher = new syshud_keytoggles(&dispatcher_keytoggles, config_main.keyboard);
+		else if (monitor == "keyboard" && config_main.keyboard != "" && config_main.orientation == 'h') {
+			keytoggle_watcher = new syshud_keytoggles(&dispatcher_keytoggles, config_main.keyboard);
 		}
 		else {
 			std::fprintf(stderr, "Unknown monitor: %s\n", monitor.c_str());
