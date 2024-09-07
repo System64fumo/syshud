@@ -6,7 +6,7 @@
 #include <thread>
 #include <libevdev/libevdev.h>
 
-syshud_keytoggles::syshud_keytoggles(const std::string& device_path) {
+syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::string& device_path) {
 	struct libevdev* dev = nullptr;
 	int fd = open(device_path.c_str() , O_RDONLY | O_NONBLOCK);
 
@@ -25,7 +25,7 @@ syshud_keytoggles::syshud_keytoggles(const std::string& device_path) {
 	num_lock = libevdev_get_event_value(dev, EV_LED, LED_NUML);
 	scroll_lock = libevdev_get_event_value(dev, EV_LED, LED_SCROLLL);
 
-	std::thread([&, fd, dev]() {
+	std::thread([&, fd, dev, callback]() {
 		while (true) {
 			struct input_event ev;
 			int rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_NORMAL, &ev);
@@ -39,17 +39,33 @@ syshud_keytoggles::syshud_keytoggles(const std::string& device_path) {
 			}
 
 			// Process LED events (Caps Lock, Num Lock, Scroll Lock)
-			if (ev.type == EV_LED) {
-				std::printf("Update!\n");
-				if (ev.code == LED_CAPSL)
-					caps_lock = ev.value;
+			if (ev.type != EV_LED)
+				continue;
 
-				else if (ev.code == LED_NUML)
-					num_lock = ev.value;
+			// What the hell is this mess???
+			if (ev.code == LED_CAPSL)
+				caps_lock = ev.value;
 
-				else if (ev.code == LED_SCROLLL)
-					scroll_lock = ev.value;
-			}
+			else if (ev.code == LED_NUML)
+				num_lock = ev.value;
+
+			else if (ev.code == LED_SCROLLL)
+				scroll_lock = ev.value;
+
+			if (caps_lock != caps_lock_prev)
+				changed = 'c';
+
+			else if (num_lock != num_lock_prev)
+				changed = 'n';
+
+			else if (scroll_lock != scroll_lock_prev)
+				changed = 's';
+
+			caps_lock_prev = caps_lock;
+			num_lock_prev = num_lock;
+			scroll_lock_prev = scroll_lock;
+
+			callback->emit();
 		}
 		libevdev_free(dev);
 		close(fd);

@@ -15,6 +15,7 @@
 #include "wireplumber.hpp"
 #endif
 #include "backlight.hpp"
+#include "keytoggles.hpp"
 
 class syshud : public Gtk::Window {
 
@@ -31,6 +32,7 @@ class syshud : public Gtk::Window {
 		syshud_wireplumber *syshud_wp;
 		#endif
 		syshud_backlight *backlight;
+		syshud_keytoggles *keytoggle_watcher;
 
 
 	private:
@@ -49,11 +51,13 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_audio_in;
 		Glib::Dispatcher dispatcher_audio_out;
 		Glib::Dispatcher dispatcher_backlight;
+		Glib::Dispatcher dispatcher_keytoggles;
 
 		void InitLayout();
 		void on_change(const char &reason, const int &value);
 		void on_audio_callback(const bool &input);
 		void on_backlight_callback();
+		void on_keytoggle_callback();
 		void setup_monitors();
 		bool timer();
 };
