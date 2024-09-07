@@ -291,6 +291,10 @@ void syshud::setup_monitors() {
 		else if (monitor == "brightness") {
 			backlight = new syshud_backlight(&dispatcher_backlight, config_main.backlight_path);
 		}
+		else if (monitor == "keyboard") {
+			if (config_main.keyboard != "")
+				keytoggle_watcher = new syshud_keytoggles(&dispatcher_keytoggles, config_main.keyboard);
+		}
 		else {
 			std::fprintf(stderr, "Unknown monitor: %s\n", monitor.c_str());
 		}

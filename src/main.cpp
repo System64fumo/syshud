@@ -88,13 +88,17 @@ int main(int argc, char* argv[]) {
 		std::string cfg_monitors = config.get_value("main", "monitors");
 		if (cfg_monitors != "empty")
 			config_main.monitors = cfg_monitors;
+
+		std::string cfg_keyboard = config.get_value("main", "keyboard");
+		if (cfg_keyboard != "empty")
+			config_main.keyboard = cfg_keyboard;
 	}
 	#endif
 
 	// Read launch arguments
 	#ifdef RUNTIME_CONFIG
 	while (true) {
-		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dM:dvh")) {
+		switch(getopt(argc, argv, "p:co:cW:dH:di:dPm:dt:dT:db:dM:dk:dvh")) {
 			case 'p':
 				config_main.position = optarg;
 				continue;
@@ -139,6 +143,10 @@ int main(int argc, char* argv[]) {
 				config_main.monitors = optarg;
 				continue;
 
+			case 'k':
+				config_main.keyboard = optarg;
+				continue;
+
 			case 'v':
 				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
 				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
@@ -160,6 +168,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -T	Set transition time" << std::endl;
 				std::cout << "  -b	Set custom backlight path" << std::endl;
 				std::cout << "  -M	Set things to monitor" << std::endl;
+				std::cout << "  -k	Set keyboard path" << std::endl;
 				std::cout << "  -v	Prints version info" << std::endl;
 				std::cout << "  -h	Show this help message" << std::endl;
 				return 0;

@@ -17,4 +17,5 @@ struct config_hud {
 	int transition_time = 250;
 	std::string backlight_path = "";
 	std::string monitors = "audio_in,audio_out,brightness";
+	std::string keyboard = "";
 };
