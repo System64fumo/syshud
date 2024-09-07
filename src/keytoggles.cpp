@@ -21,9 +21,8 @@ syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::stri
 	}
 
 	// Get initial states
-	caps_lock = libevdev_get_event_value(dev, EV_LED, LED_CAPSL);
-	num_lock = libevdev_get_event_value(dev, EV_LED, LED_NUML);
-	scroll_lock = libevdev_get_event_value(dev, EV_LED, LED_SCROLLL);
+	caps_lock_prev = libevdev_get_event_value(dev, EV_LED, LED_CAPSL);
+	num_lock_prev = libevdev_get_event_value(dev, EV_LED, LED_NUML);
 
 	std::thread([&, fd, dev, callback]() {
 		while (true) {
@@ -49,21 +48,14 @@ syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::stri
 			else if (ev.code == LED_NUML)
 				num_lock = ev.value;
 
-			else if (ev.code == LED_SCROLLL)
-				scroll_lock = ev.value;
-
 			if (caps_lock != caps_lock_prev)
 				changed = 'c';
 
 			else if (num_lock != num_lock_prev)
 				changed = 'n';
 
-			else if (scroll_lock != scroll_lock_prev)
-				changed = 's';
-
 			caps_lock_prev = caps_lock;
 			num_lock_prev = num_lock;
-			scroll_lock_prev = scroll_lock;
 
 			callback->emit();
 		}
