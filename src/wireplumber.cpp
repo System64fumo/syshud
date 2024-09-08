@@ -29,7 +29,7 @@ void syshud_wireplumber::onMixerChanged(syshud_wireplumber* self, uint32_t id) {
 							WP_PIPEWIRE_OBJECT(node), "media.class"));
 
 	// Set values and trigger a callback
-	self->volume = (temp_volume + 0.000001) * 100.0;
+	self->volume = (temp_volume + 0.0001) * 100.0;
 	if (media_class == "Audio/Source") {
 		if (self->input_callback != nullptr)
 			self->input_callback->emit();
