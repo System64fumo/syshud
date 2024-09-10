@@ -299,6 +299,9 @@ void syshud::setup_monitors() {
 	Glib::Dispatcher *audio_in = nullptr;
 	Glib::Dispatcher *audio_out = nullptr;
 
+	// Sleep a little, This *should* help with some weird edge cases..
+	usleep(100 * 1000);
+
 	while (std::getline(iss, monitor, ',')) {
 		if (monitor == "audio_in") {
 			audio_in = &dispatcher_audio_in;
