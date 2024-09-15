@@ -71,6 +71,6 @@ src/git_info.hpp:
 	$(call progress, Creating $@)
 	@commit_hash=$$(git rev-parse HEAD); \
 	commit_date=$$(git show -s --format=%cd --date=short $$commit_hash); \
-	commit_message=$$(git show -s --format=%s $$commit_hash); \
+	commit_message=$$(git show -s --format="%s" $$commit_hash | sed 's/"/\\\"/g'); \
 	echo "#define GIT_COMMIT_MESSAGE \"$$commit_message\"" > src/git_info.hpp; \
 	echo "#define GIT_COMMIT_DATE \"$$commit_date\"" >> src/git_info.hpp
