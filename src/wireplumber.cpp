@@ -133,21 +133,44 @@ syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::D
 	apis = g_ptr_array_new_with_free_func(g_object_unref);
 	om = wp_object_manager_new();
 
-	wp_object_manager_add_interest(om, WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-								   "media.class", "=s", "Audio/Sink", nullptr);
-	wp_object_manager_add_interest(om, WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-								   "media.class", "=s", "Audio/Source", nullptr);
+	// This has to be done from the main thread
+	g_main_context_invoke(NULL, [](gpointer user_data) -> gboolean {
+		if (wp_core_connect(static_cast<WpCore*>(user_data)) == 0)
+			std::fprintf(stderr, "Could not connect to wireplumber\n");
+		return G_SOURCE_REMOVE;
+	}, core);
 
-	if (wp_core_connect(core) == 0) {
-		std::fprintf(stderr, "Could not connect to wireplumber\n");
-		return;
-	}
+	g_signal_connect_swapped(
+		om,
+		"installed",
+		(GCallback)onObjectManagerInstalled,
+		this);
 
-	g_signal_connect_swapped(om, "installed", (GCallback)onObjectManagerInstalled, this);
+	wp_object_manager_add_interest(
+		om,
+		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
+		"media.class",
+		"=s",
+		"Audio/Sink",
+		nullptr);
 
-	wp_core_load_component(core, "libwireplumber-module-default-nodes-api", "module", nullptr,
-							"default-nodes-api", nullptr, (GAsyncReadyCallback)onDefaultNodesApiLoaded,
-							this);
+	wp_object_manager_add_interest(
+		om,
+		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
+		"media.class",
+		"=s",
+		"Audio/Source",
+		nullptr);
+
+	wp_core_load_component(
+		core,
+		"libwireplumber-module-default-nodes-api",
+		"module",
+		nullptr,
+		"default-nodes-api",
+		nullptr,
+		(GAsyncReadyCallback)onDefaultNodesApiLoaded,
+		this);
 }
 
 syshud_wireplumber::~syshud_wireplumber() {
