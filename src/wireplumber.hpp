@@ -12,6 +12,8 @@ class syshud_wireplumber {
 		const char* output_name;
 		const char* input_name;
 
+		void set_volume(bool type, double value);
+
 	private:
 		Glib::Dispatcher* input_callback;
 		Glib::Dispatcher* output_callback;
