@@ -263,7 +263,7 @@ void syshud::on_change(const char &reason, const int &value) {
 
 bool syshud::on_scale_change(Gtk::ScrollType scroll_type, double val) {
 	if (last_reason == 'b') {
-		// TODO: Add backlight set code
+		backlight->set_brightness(val);
 	}
 	else if (last_reason == 'i') {
 		#ifndef PULSEAUDIO

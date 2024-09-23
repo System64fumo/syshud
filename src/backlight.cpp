@@ -37,7 +37,7 @@ int syshud_backlight::get_brightness() {
 
 void syshud_backlight::set_brightness(const double &value) {
 	std::ofstream backlight_file(backlight_path + "/brightness", std::ios::trunc);
-	backlight_file << (max_brightness / value);
+	backlight_file << (value * max_brightness) / 100;
 }
 
 syshud_backlight::syshud_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
