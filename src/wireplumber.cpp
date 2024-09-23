@@ -124,6 +124,12 @@ void syshud_wireplumber::onObjectManagerInstalled(syshud_wireplumber* self) {
 	onDefaultNodesApiChanged(self);
 }
 
+void syshud_wireplumber::set_volume(bool type, double value) {
+	gboolean res = FALSE;
+	const uint32_t node_id = (type) ? output_id : input_id;
+	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100), &res);
+}
+
 syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) {
 	this->input_callback = input_callback;
 	this->output_callback = output_callback;

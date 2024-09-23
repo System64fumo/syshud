@@ -42,6 +42,7 @@ class syshud : public Gtk::Window {
 		bool timer_ticking = false;
 		std::string previous_class;
 		int timeout = 1;
+		char last_reason;
 
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;
@@ -55,6 +56,7 @@ class syshud : public Gtk::Window {
 
 		void InitLayout();
 		void on_change(const char &reason, const int &value);
+		bool on_scale_change(Gtk::ScrollType scroll_type, double val);
 		void on_audio_callback(const bool &input);
 		void on_backlight_callback();
 		void on_keytoggle_callback();

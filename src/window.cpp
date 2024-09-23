@@ -140,8 +140,7 @@ syshud::syshud(const config_hud &cfg) {
 	scale_volume.set_range(0, 100);
 	scale_volume.set_increments(5, 10);
 
-	// TODO: Re enable this once code for setting volume has been added
-	scale_volume.set_sensitive(false);
+	scale_volume.signal_change_value().connect(sigc::mem_fun(*this, &syshud::on_scale_change), true);
 
 	if (config_main.icon_size != 0) {
 		image_volume.set_pixel_size(config_main.icon_size);
@@ -178,6 +177,7 @@ syshud::~syshud() {
 
 void syshud::on_change(const char &reason, const int &value) {
 	timeout_connection.disconnect();
+	last_reason = reason;
 
 	if (timer_ticking)
 		timeout = config_main.desired_timeout;
@@ -259,6 +259,23 @@ void syshud::on_change(const char &reason, const int &value) {
 	// Check if we should draw the percentage
 	if (config_main.show_percentage)
 		label_volume.set_label(label);
+}
+
+bool syshud::on_scale_change(Gtk::ScrollType scroll_type, double val) {
+	if (last_reason == 'b') {
+		// TODO: Add backlight set code
+	}
+	else if (last_reason == 'i') {
+		#ifndef PULSEAUDIO
+		syshud_wp->set_volume(false, val);
+		#endif
+	}
+	else if (last_reason == 'o') {
+		#ifndef PULSEAUDIO
+		syshud_wp->set_volume(true, val);
+		#endif
+	}
+	return false;
 }
 
 void syshud::on_audio_callback(const bool &input) {
