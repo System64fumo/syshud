@@ -18,11 +18,12 @@ void syshud_backlight::get_backlight_path(std::string custom_backlight_path) {
 			if (std::filesystem::is_directory(entry.path())) {
 				backlight_path = entry.path();
 				std::cout << "Backlight: " << backlight_path << std::endl;
-				return;
+				continue;
 			}
 		}
-		std::cout << "Unable to automatically detect your backlight" << std::endl;
 	}
+	if (backlight_path.empty())
+		std::cout << "Unable to automatically detect your backlight" << std::endl;
 }
 
 int syshud_backlight::get_brightness() {
