@@ -20,7 +20,7 @@
 class syshud : public Gtk::Window {
 
 	public:
-		syshud(const config_hud &cfg);
+		syshud(const std::map<std::string, std::map<std::string, std::string>>&);
 		~syshud();
 
 		sigc::connection timeout_connection;
@@ -36,7 +36,7 @@ class syshud : public Gtk::Window {
 
 
 	private:
-		config_hud config_main;
+		std::map<std::string, std::map<std::string, std::string>> config_main;
 		bool muted = false;
 		bool first_run = false;
 		bool timer_ticking = false;
@@ -65,5 +65,5 @@ class syshud : public Gtk::Window {
 };
 
 extern "C" {
-	syshud *syshud_create(const config_hud &cfg);
+	syshud *syshud_create(const std::map<std::string, std::map<std::string, std::string>>& cfg);
 }

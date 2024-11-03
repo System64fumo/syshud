@@ -1,9 +1,8 @@
 #include "config_parser.hpp"
-#include <iostream>
 #include <fstream>
 #include <sstream>
 
-config_parser::config_parser(const std::string &filename) {
+config_parser::config_parser(const std::string& filename) {
 	std::ifstream file(filename);
 	std::string line;
 	std::string current_section;
@@ -32,32 +31,15 @@ config_parser::config_parser(const std::string &filename) {
 		file.close();
 	}
 	else {
-		std::cerr << "Unable to open file: " << filename << std::endl;
+		std::fprintf(stderr, "Unable to open file: %s\n", filename.c_str());
 	}
 }
 
-std::string config_parser::get_value(const std::string &section, const std::string &key) {
-	auto section_iter = data.find(section);
-	if (section_iter != data.end()) {
-		auto key_iter = section_iter->second.find(key);
-		if (key_iter != section_iter->second.end()) {
-			return key_iter->second;
-		}
-		else {
-			std::cerr << "Key '" << key << "' not found in section '" << section << "'" << std::endl;
-		}
-	}
-	else {
-		std::cerr << "Section '" << section << "' not found" << std::endl;
-	}
-	return "empty";
-}
-
-std::string config_parser::trim(const std::string &str) {
-	size_t first = str.find_first_not_of(' ');
+std::string config_parser::trim(const std::string& str) {
+	const size_t first = str.find_first_not_of(' ');
 	if (std::string::npos == first) {
 		return str;
 	}
-	size_t last = str.find_last_not_of(' ');
+	const size_t last = str.find_last_not_of(' ');
 	return str.substr(first, (last - first + 1));
 }
