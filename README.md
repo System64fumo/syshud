@@ -24,10 +24,8 @@ arguments:
   -v	Prints version info
 ```
 
-Pulseaudio support can be enabled instead of wireplumber by compiling using:<br>
-```
-make PULSEAUDIO=1
-```
+To use pulseaudio instead of wireplumber,<br>
+change `#define AUDIO_WIREPLUMBER` to `#define AUDIO_PULSEAUDIO` in `src/config.hpp`
 
 # Theming
 syshud uses your gtk4 theme by default, However it can be also load custom css,<br>

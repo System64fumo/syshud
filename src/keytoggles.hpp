@@ -1,3 +1,4 @@
+#pragma once
 #include <glibmm/dispatcher.h>
 
 class syshud_keytoggles {

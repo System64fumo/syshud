@@ -1,24 +1,36 @@
 BIN = syshud
 LIB = libsyshud.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0 libevdev
+PKGS = gtkmm-4.0 gtk4-layer-shell-0
 SRCS = $(wildcard src/*.cpp)
-OBJS = $(SRCS:.cpp=.o)
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
 
-ifeq ($(PULSEAUDIO),1)
+SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
+SRCS := $(filter-out src/pulse.cpp,$(SRCS))
+SRCS := $(filter-out src/backlight.cpp,$(SRCS))
+SRCS := $(filter-out src/keytoggles.cpp,$(SRCS))
+
+# TODO: Add support for both pulse and wp (Auto detect)
+ifneq (, $(shell grep -E '^#define AUDIO_PULSEAUDIO' src/config.hpp))
+	SRCS += src/pulse.cpp
 	PKGS += libpulse
-	CXXFLAGS += -DPULSEAUDIO
-	SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
-	OBJS := $(filter-out src/wireplumber.o,$(OBJS))
-else
-	PKGS += wireplumber-0.5
-	SRCS := $(filter-out src/pulse.cpp,$(SRCS))
-	OBJS := $(filter-out src/pulse.o,$(OBJS))
 endif
+ifneq (, $(shell grep -E '^#define AUDIO_WIREPLUMBER' src/config.hpp))
+	SRCS += src/wireplumber.cpp
+	PKGS += wireplumber-0.5
+endif
+ifneq (, $(shell grep -E '^#define FEATURE_BACKLIGHT' src/config.hpp))
+	SRCS += src/backlight.cpp
+endif
+ifneq (, $(shell grep -E '^#define FEATURE_KEYBOARD' src/config.hpp))
+	SRCS += src/keytoggles.cpp
+	PKGS += libevdev
+endif
+
+OBJS = $(SRCS:.cpp=.o)
 
 CXXFLAGS += -Oz -s -Wall -flto -fno-exceptions -fPIC
 LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
@@ -38,8 +50,8 @@ all: $(BIN) $(LIB)
 
 install: $(all)
 	@echo "Installing..."
-	@install -D -t $(DESTDIR)$(BINDIR) $(BINS)
-	@install -D -t $(DESTDIR)$(LIBDIR) $(LIBS)
+	@install -D -t $(DESTDIR)$(BINDIR) $(BIN)
+	@install -D -t $(DESTDIR)$(LIBDIR) $(LIB)
 	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.css
 
 clean:
