@@ -1,5 +1,5 @@
-BINS = syshud
-LIBS = libsyshud.so
+BIN = syshud
+LIB = libsyshud.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0 libevdev
 SRCS = $(wildcard src/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
@@ -26,7 +26,7 @@ LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
-JOB_COUNT := $(EXEC) $(LIB) $(OBJS) src/git_info.hpp
+JOB_COUNT := $(BIN) $(LIB) $(OBJS) src/git_info.hpp
 JOBS_DONE := $(shell ls -l $(JOB_COUNT) 2> /dev/null | wc -l)
 
 define progress
@@ -34,7 +34,7 @@ define progress
 	@printf "[$(JOBS_DONE)/$(shell echo $(JOB_COUNT) | wc -w)] %s %s\n" $(1) $(2)
 endef
 
-all: $(BINS) $(LIBS)
+all: $(BIN) $(LIB)
 
 install: $(all)
 	@echo "Installing..."
@@ -44,19 +44,19 @@ install: $(all)
 
 clean:
 	@echo "Cleaning up"
-	@rm $(BINS) $(LIBS) $(OBJS) src/git_info.hpp
+	@rm $(BIN) $(LIB) $(OBJS) src/git_info.hpp
 
-$(BINS): src/git_info.hpp src/main.o src/config_parser.o
+$(BIN): src/git_info.hpp src/main.o src/config_parser.o
 	$(call progress, Linking $@)
-	@$(CXX) -o $(BINS) \
+	@$(CXX) -o $(BIN) \
 	src/main.o \
 	src/config_parser.o \
 	$(CXXFLAGS) \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
-$(LIBS): $(OBJS)
+$(LIB): $(OBJS)
 	$(call progress, Linking $@)
-	@$(CXX) -o $(LIBS) \
+	@$(CXX) -o $(LIB) \
 	$(filter-out src/main.o src/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
 	$(LDFLAGS) \

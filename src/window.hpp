@@ -1,5 +1,4 @@
 #pragma once
-#include <glibmm/dispatcher.h>
 #include <gtkmm/window.h>
 #include <gtkmm/scale.h>
 #include <gtkmm/revealer.h>
@@ -23,8 +22,13 @@ class syshud : public Gtk::Window {
 		syshud(const std::map<std::string, std::map<std::string, std::string>>&);
 		~syshud();
 
+	private:
+		std::map<std::string, std::map<std::string, std::string>> config_main;
+		bool muted = false;
+		std::string previous_class;
+		int timeout = 1;
+		char last_reason;
 		sigc::connection timeout_connection;
-		Gtk::Revealer revealer_box;
 
 		#ifdef PULSEAUDIO
 		PulseAudio *pa;
@@ -34,20 +38,11 @@ class syshud : public Gtk::Window {
 		syshud_backlight *backlight;
 		syshud_keytoggles *keytoggle_watcher;
 
-
-	private:
-		std::map<std::string, std::map<std::string, std::string>> config_main;
-		bool muted = false;
-		bool first_run = false;
-		bool timer_ticking = false;
-		std::string previous_class;
-		int timeout = 1;
-		char last_reason;
-
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;
 		Gtk::Scale scale_volume;
 		Gtk::Label label_volume;
+		Gtk::Revealer revealer_box;
 		Gtk::RevealerTransitionType transition_type;
 		Glib::Dispatcher dispatcher_audio_in;
 		Glib::Dispatcher dispatcher_audio_out;
@@ -55,9 +50,9 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_keytoggles;
 
 		void InitLayout();
-		void on_change(const char &reason, const int &value);
-		bool on_scale_change(Gtk::ScrollType scroll_type, double val);
-		void on_audio_callback(const bool &input);
+		void on_change(const char&, const int&);
+		bool on_scale_change(const Gtk::ScrollType&, const double&);
+		void on_audio_callback(const bool&);
 		void on_backlight_callback();
 		void on_keytoggle_callback();
 		void setup_monitors();
@@ -65,5 +60,5 @@ class syshud : public Gtk::Window {
 };
 
 extern "C" {
-	syshud *syshud_create(const std::map<std::string, std::map<std::string, std::string>>& cfg);
+	syshud *syshud_create(const std::map<std::string, std::map<std::string, std::string>>&);
 }

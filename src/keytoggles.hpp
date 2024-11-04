@@ -1,4 +1,3 @@
-#include <string>
 #include <glibmm/dispatcher.h>
 
 class syshud_keytoggles {
