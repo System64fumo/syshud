@@ -8,13 +8,18 @@
 
 #include "config.hpp"
 
-#ifdef PULSEAUDIO
+#ifdef AUDIO_PULSEAUDIO
 #include "pulse.hpp"
-#else
+#endif
+#ifdef AUDIO_WIREPLUMBER
 #include "wireplumber.hpp"
 #endif
+#ifdef FEATURE_BACKLIGHT
 #include "backlight.hpp"
+#endif
+#ifdef FEATURE_KEYBOARD
 #include "keytoggles.hpp"
+#endif
 
 class syshud : public Gtk::Window {
 
@@ -30,13 +35,21 @@ class syshud : public Gtk::Window {
 		char last_reason;
 		sigc::connection timeout_connection;
 
-		#ifdef PULSEAUDIO
+		#ifdef AUDIO_PULSEAUDIO
 		PulseAudio *pa;
-		#else
+		#endif
+
+		#ifdef AUDIO_WIREPLUMBER
 		syshud_wireplumber *syshud_wp;
 		#endif
+
+		#ifdef FEATURE_BACKLIGHT
 		syshud_backlight *backlight;
+		#endif
+
+		#ifdef FEATURE_KEYBOARD
 		syshud_keytoggles *keytoggle_watcher;
+		#endif
 
 		Gtk::Box box_layout;
 		Gtk::Image image_volume;
@@ -54,7 +67,6 @@ class syshud : public Gtk::Window {
 		bool on_scale_change(const Gtk::ScrollType&, const double&);
 		void on_audio_callback(const bool&);
 		void on_backlight_callback();
-		void on_keytoggle_callback();
 		void setup_monitors();
 		bool timer();
 };
