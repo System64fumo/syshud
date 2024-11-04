@@ -1,7 +1,7 @@
 #include "window.hpp"
-#include "css.hpp"
 
 #include <gtk4-layer-shell.h>
+#include <gtkmm/cssprovider.h>
 #include <filesystem>
 #include <thread>
 
@@ -109,7 +109,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	int count = 0;
 
 	while (std::getline(iss, margin_str, ' ')) {
-		int margin = std::stoi(margin_str);
+		const int& margin = std::stoi(margin_str);
 
 		if (count == 0)
 			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_TOP, margin);
@@ -137,7 +137,6 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 
 	scale_volume.set_range(0, 100);
 	scale_volume.set_increments(5, 10);
-
 	scale_volume.signal_change_value().connect(sigc::mem_fun(*this, &syshud::on_scale_change), true);
 
 	if (std::stoi(config_main["main"]["icon-size"]) != 0) {
@@ -162,7 +161,10 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	else
 		style_path = "/usr/local/share/sys64/hud/style.css";
 
-	css_loader loader(style_path, this);
+	auto css = Gtk::CssProvider::create();
+	css->load_from_path(style_path);
+	auto style_context = get_style_context();
+	style_context->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
 syshud::~syshud() {
@@ -173,18 +175,17 @@ syshud::~syshud() {
 	#endif
 }
 
-void syshud::on_change(const char &reason, const int &value) {
+void syshud::on_change(const char& reason, const int& value) {
 	timeout_connection.disconnect();
 	last_reason = reason;
 
-	if (timer_ticking)
+	if (timeout != 1)
 		timeout = std::stoi(config_main["main"]["timeout"]);
 
 	else if (timeout == 1) {
 		show();
 
 		revealer_box.set_reveal_child(true);
-		timer_ticking = true;
 		timeout = std::stoi(config_main["main"]["timeout"]);
 		Glib::signal_timeout().connect(sigc::mem_fun(*this, &syshud::timer), 1000);
 	}
@@ -203,18 +204,24 @@ void syshud::on_change(const char &reason, const int &value) {
 
 	std::string label;
 	std::string icon;
+
+	// Backlight
 	if (reason == 'b') {
 		if (value == 0)
 			icon = "display-brightness-off-symbolic";
 		else
 			icon = "display-brightness-" + value_levels[value / 34 + 1] + "-symbolic";
 	}
+
+	// Audio input
 	else if (reason == 'i') {
 		if (muted)
 			icon = "audio-input-microphone-muted-symbolic";
 		else if (value <= 100)
 			icon = "audio-input-microphone-" + value_levels[value / 34 + 1] + "-symbolic";
 	}
+
+	// Audio output
 	else if (reason == 'o') {
 		if (muted)
 			icon = "audio-volume-muted-blocking-symbolic";
@@ -223,6 +230,8 @@ void syshud::on_change(const char &reason, const int &value) {
 		else
 			icon = "audio-volume-overamplified-symbolic";
 	}
+
+	// Keyboard
 	else if (reason == 'k') {
 		if (value == 'c') {
 			label = "Caps Lock";
@@ -248,26 +257,27 @@ void syshud::on_change(const char &reason, const int &value) {
 		box_layout.get_style_context()->add_class(previous_class);
 	}
 
-	// Set the appropiate icon
+	// Show data
 	image_volume.set_from_icon_name(icon);
-
-	// Set the appropiate value
 	scale_volume.set_value(value);
-
-	// Check if we should draw the percentage
 	if (config_main["main"]["show-percentage"] == "true")
 		label_volume.set_label(label);
 }
 
-bool syshud::on_scale_change(Gtk::ScrollType scroll_type, double val) {
+bool syshud::on_scale_change(const Gtk::ScrollType&, const double& val) {
+	// Backlight
 	if (last_reason == 'b') {
 		backlight->set_brightness(val);
 	}
+
+	// Audio input
 	else if (last_reason == 'i') {
 		#ifndef PULSEAUDIO
 		syshud_wp->set_volume(false, val);
 		#endif
 	}
+
+	// Audio output
 	else if (last_reason == 'o') {
 		#ifndef PULSEAUDIO
 		syshud_wp->set_volume(true, val);
@@ -276,19 +286,14 @@ bool syshud::on_scale_change(Gtk::ScrollType scroll_type, double val) {
 	return false;
 }
 
-void syshud::on_audio_callback(const bool &input) {
+void syshud::on_audio_callback(const bool& input) {
 	#ifdef PULSEAUDIO
-	int volume = pa->volume;
+	const int& volume = pa->volume;
 	muted = pa->muted;
 	#else
-	int volume = syshud_wp->volume;
+	const int& volume = syshud_wp->volume;
 	muted = syshud_wp->muted;
 	#endif
-
-	if (!first_run) {
-		first_run = true;
-			return;
-	}
 
 	scale_volume.show();
 	if (input)
@@ -307,15 +312,13 @@ void syshud::on_keytoggle_callback() {
 	on_change('k', keytoggle_watcher->changed);
 }
 
+// TODO: monitors is a weird name, Consider a better name
 void syshud::setup_monitors() {
 	std::istringstream iss(config_main["main"]["monitors"]);
 	std::string monitor;
 
-	Glib::Dispatcher *audio_in = nullptr;
-	Glib::Dispatcher *audio_out = nullptr;
-
-	// Sleep a little, This *should* help with some weird edge cases..
-	usleep(100 * 1000);
+	Glib::Dispatcher* audio_in = nullptr;
+	Glib::Dispatcher* audio_out = nullptr;
 
 	while (std::getline(iss, monitor, ',')) {
 		if (monitor == "audio_in") {
@@ -350,7 +353,6 @@ bool syshud::timer() {
 	if (timeout == 1) {
 		// Start hiding the overlay
 		revealer_box.set_reveal_child(false);
-		timer_ticking = false;
 
 		// Hide the overlay after it's no longer visible
 		timeout_connection = Glib::signal_timeout().connect([&]() {
