@@ -164,19 +164,21 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	});
 	#endif
 
-	// Load custom css
-	std::string style_path;
-	if (std::filesystem::exists(std::string(getenv("HOME")) + "/.config/sys64/hud/style.css"))
-		style_path = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
-	else if (std::filesystem::exists("/usr/share/sys64/hud/style.css"))
-		style_path = "/usr/share/sys64/hud/style.css";
-	else
-		style_path = "/usr/local/share/sys64/hud/style.css";
+	const std::string& style_path = "/usr/share/sys64/hud/style.css";
+	const std::string& style_path_usr = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
 
-	auto css = Gtk::CssProvider::create();
-	css->load_from_path(style_path);
-	auto style_context = get_style_context();
-	style_context->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+	// Load base style
+	if (std::filesystem::exists(style_path)) {
+		auto css = Gtk::CssProvider::create();
+		css->load_from_path(style_path);
+		get_style_context()->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+	}
+	// Load user style
+	if (std::filesystem::exists(style_path_usr)) {
+		auto css = Gtk::CssProvider::create();
+		css->load_from_path(style_path_usr);
+		get_style_context()->add_provider_for_display(property_display(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
+	}
 }
 
 syshud::~syshud() {
