@@ -62,7 +62,8 @@ int main(int argc, char* argv[]) {
 
 	// Merge configs
 	for (const auto& [key, nested_map] : config_usr)
-		config[key] = nested_map;
+		for (const auto& [inner_key, inner_value] : nested_map)
+			config[key][inner_key] = inner_value;
 
 	// Sanity check
 	if (!(cfg_sys || cfg_sys_local || cfg_usr)) {
