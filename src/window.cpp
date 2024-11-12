@@ -72,7 +72,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 		get_style_context()->add_class("vertical");
 		scale_volume.set_orientation(Gtk::Orientation::VERTICAL);
 		box_layout.property_orientation().set_value(Gtk::Orientation::VERTICAL);
-		set_default_size(std::stoi(config_main["main"]["width"]), std::stoi(config_main["main"]["height"]));
+		set_default_size(std::stoi(config_main["main"]["height"]), std::stoi(config_main["main"]["width"]));
 
 		// Check to see if the percentage should be shown
 		if (config_main["main"]["show-percentage"] == "true")
