@@ -64,6 +64,7 @@ $(BIN): src/git_info.hpp src/main.o src/config_parser.o
 	src/main.o \
 	src/config_parser.o \
 	$(CXXFLAGS) \
+	-Wl,--no-as-needed \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIB): $(OBJS)
