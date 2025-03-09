@@ -7,6 +7,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
+BUILDDIR = build
 
 SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
 SRCS := $(filter-out src/pulse.cpp,$(SRCS))
@@ -30,14 +31,15 @@ ifneq (, $(shell grep -E '^#define FEATURE_KEYBOARD' src/config.hpp))
 	PKGS += libevdev
 endif
 
-OBJS = $(SRCS:.cpp=.o)
+OBJS = $(patsubst src/%, $(BUILDDIR)/%, $(SRCS:.cpp=.o))
 
 CXXFLAGS += -Oz -s -Wall -flto -fno-exceptions -fPIC
-LDFLAGS += -Wl,--as-needed,-z,now,-z,pack-relative-relocs
+LDFLAGS += -Wl,--no-as-needed,-z,now,-z,pack-relative-relocs
 
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
 LDFLAGS += $(shell pkg-config --libs $(PKGS))
 
+$(shell mkdir -p $(BUILDDIR))
 JOB_COUNT := $(BIN) $(LIB) $(OBJS) src/git_info.hpp
 JOBS_DONE := $(shell ls -l $(JOB_COUNT) 2> /dev/null | wc -l)
 
@@ -50,32 +52,31 @@ all: $(BIN) $(LIB)
 
 install: $(all)
 	@echo "Installing..."
-	@install -D -t $(DESTDIR)$(BINDIR) $(BIN)
-	@install -D -t $(DESTDIR)$(LIBDIR) $(LIB)
+	@install -D -t $(DESTDIR)$(BINDIR) $(BUILDDIR)/$(BIN)
+	@install -D -t $(DESTDIR)$(LIBDIR) $(BUILDDIR)/$(LIB)
 	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.css
 
 clean:
 	@echo "Cleaning up"
-	@rm $(BIN) $(LIB) $(OBJS) src/git_info.hpp
+	@rm -r $(BUILDDIR) src/git_info.hpp
 
-$(BIN): src/git_info.hpp src/main.o src/config_parser.o
+$(BIN): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(call progress, Linking $@)
-	@$(CXX) -o $(BIN) \
-	src/main.o \
-	src/config_parser.o \
+	@$(CXX) -o $(BUILDDIR)/$(BIN) \
+	$(BUILDDIR)/main.o \
+	$(BUILDDIR)/config_parser.o \
 	$(CXXFLAGS) \
-	-Wl,--no-as-needed \
 	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIB): $(OBJS)
 	$(call progress, Linking $@)
-	@$(CXX) -o $(LIB) \
-	$(filter-out src/main.o src/config_parser.o, $(OBJS)) \
+	@$(CXX) -o $(BUILDDIR)/$(LIB) \
+	$(filter-out $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
 	$(LDFLAGS) \
 	-shared
 
-%.o: %.cpp
+$(BUILDDIR)/%.o: src/%.cpp
 	$(call progress, Compiling $@)
 	@$(CXX) -c $< -o $@ \
 	$(CXXFLAGS)
