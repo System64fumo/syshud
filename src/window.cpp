@@ -230,7 +230,7 @@ void syshud::on_change(const char& reason, const int& value) {
 	// Audio output
 	else if (reason == 'o') {
 		if (muted)
-			icon = "audio-volume-muted-blocking-symbolic";
+			icon = "audio-volume-muted-symbolic";
 		else if (value <= 100)
 			icon = "audio-volume-" + value_levels[value / 34 + 1] + "-symbolic";
 		else
