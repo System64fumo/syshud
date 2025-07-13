@@ -1,4 +1,6 @@
 #include "wireplumber.hpp"
+#include <iostream>
+#include <thread>
 
 bool syshud_wireplumber::is_valid_node_id(const uint32_t& id) {
 	return id > 0 && id < G_MAXUINT32;
@@ -11,8 +13,8 @@ void syshud_wireplumber::on_mixer_changed(syshud_wireplumber* self, uint32_t id)
 		return;
 
 	g_autoptr(WpNode) node = static_cast<WpNode*>(wp_object_manager_lookup(
-				self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
-				"=u", id, nullptr));
+		self->om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_G_PROPERTY, "bound-id",
+		"=u", id, nullptr));
 
 	if (node == nullptr)
 		return;
@@ -23,20 +25,13 @@ void syshud_wireplumber::on_mixer_changed(syshud_wireplumber* self, uint32_t id)
 	g_variant_lookup(variant, "mute", "b", &self->muted);
 	g_clear_pointer(&variant, g_variant_unref);
 
-	// Figure out if the change came from an input or output device
 	const std::string media_class = std::string(
-						wp_pipewire_object_get_property(
-							WP_PIPEWIRE_OBJECT(node), "media.class"));
+		wp_pipewire_object_get_property(
+			WP_PIPEWIRE_OBJECT(node), "media.class"));
 
-	// Set values and trigger a callback
 	self->volume = (temp_volume + 0.0001) * 100.0;
-	if (media_class == "Audio/Source") {
-		if (self->input_callback != nullptr)
-			self->input_callback->emit();
-	}
-	else {
-		if (self->output_callback != nullptr)
-			self->output_callback->emit();
+	if (self->callback) {
+		self->callback(self->volume, media_class == "Audio/Sink");
 	}
 }
 
@@ -121,55 +116,37 @@ void syshud_wireplumber::on_object_manager_installed(syshud_wireplumber* self) {
 
 }
 
-void syshud_wireplumber::set_volume(const bool& type, const double& value) {
+void syshud_wireplumber::set_volume(const bool& type, const int& value) {
 	const uint32_t node_id = (type) ? output_id : input_id;
-	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100), FALSE);
+	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100.0f));
 }
 
-syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) : input_callback(input_callback), output_callback(output_callback) {
+void syshud_wireplumber::initialize() {
 	wp_init(WP_INIT_PIPEWIRE);
 	core = wp_core_new(nullptr, nullptr, nullptr);
 	apis = g_ptr_array_new_with_free_func(g_object_unref);
 	om = wp_object_manager_new();
 
-	// This has to be done from the main thread
 	g_main_context_invoke(NULL, [](gpointer user_data) -> gboolean {
 		if (wp_core_connect(static_cast<WpCore*>(user_data)) == 0)
-			std::fprintf(stderr, "Could not connect to wireplumber\n");
+			std::cerr << "Could not connect to wireplumber" << std::endl;
 		return G_SOURCE_REMOVE;
 	}, core);
 
-	g_signal_connect_swapped(
-		om,
-		"installed",
-		(GCallback)on_object_manager_installed,
-		this);
+	g_signal_connect_swapped(om, "installed", (GCallback)on_object_manager_installed, this);
 
-	wp_object_manager_add_interest(
-		om,
-		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class",
-		"=s",
-		"Audio/Sink",
-		nullptr);
+	wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
+		"media.class", "=s", "Audio/Sink", nullptr);
 
-	wp_object_manager_add_interest(
-		om,
-		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class",
-		"=s",
-		"Audio/Source",
-		nullptr);
+	wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
+		"media.class", "=s", "Audio/Source", nullptr);
 
-	wp_core_load_component(
-		core,
-		"libwireplumber-module-default-nodes-api",
-		"module",
-		nullptr,
-		"default-nodes-api",
-		nullptr,
-		(GAsyncReadyCallback)on_default_nodes_api_loaded,
-		this);
+	wp_core_load_component(core, "libwireplumber-module-default-nodes-api", "module",
+		nullptr, "default-nodes-api", nullptr, (GAsyncReadyCallback)on_default_nodes_api_loaded, this);
+}
+
+syshud_wireplumber::syshud_wireplumber(VolumeCallback callback) : callback(callback) {
+	std::thread(&syshud_wireplumber::initialize, this).detach();
 }
 
 syshud_wireplumber::~syshud_wireplumber() {

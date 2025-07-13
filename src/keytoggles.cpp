@@ -6,7 +6,7 @@
 #include <thread>
 #include <libevdev/libevdev.h>
 
-syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::string& device_path) {
+syshud_keytoggles::syshud_keytoggles(KeyTogglesCallback callback, const std::string& device_path) : callback(callback) {
 	std::thread([&, device_path, callback]() {
 		struct libevdev* dev = nullptr;
 		int fd = -1;
@@ -63,7 +63,7 @@ syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::stri
 				caps_lock_prev = caps_lock;
 				num_lock_prev = num_lock;
 
-				callback->emit();
+				callback();
 			}
 
 			libevdev_free(dev);

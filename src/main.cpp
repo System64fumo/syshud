@@ -8,12 +8,9 @@
 #include <signal.h>
 #include <dlfcn.h>
 
-void quit(int signum) {
-	app->remove_window((Gtk::Window&)*win);
-	delete win;
-	app->release();
-	app->quit();
-}
+QApplication* app = nullptr;
+syshud* win = nullptr;
+syshud_create_func syshud_create_ptr = nullptr;
 
 void load_libsyshud() {
 	void* handle = dlopen("libsyshud.so", RTLD_LAZY);
@@ -159,13 +156,10 @@ int main(int argc, char* argv[]) {
 	#endif
 
 	// Load the application
-	app = Gtk::Application::create("funky.sys64.syshud");
-	app->hold();
+	app = new QApplication(argc, argv);
 
 	load_libsyshud();
 	win = syshud_create_ptr(config);
 
-	signal(SIGINT, quit);
-
-	return app->run();
+	return app->exec();
 }

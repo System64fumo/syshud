@@ -1,0 +1,38 @@
+#syshud {
+    background: transparent;
+}
+
+#syshud #container {
+    background: palette(window);
+    border: 1px solid palette(mid);
+    border-radius: 22px;
+}
+
+#syshud #container QLabel {
+	margin: 5px;
+}
+
+#syshud #container QSlider::groove {
+	background: palette(dark);
+	border-radius: 2px;
+}
+#syshud #container QSlider::groove:horizontal {
+	height: 5px;
+}
+#syshud #container QSlider::groove:vertical {
+	width: 5px;
+}
+
+#syshud #container QSlider::sub-page {
+	border-radius: 2px;
+	background: palette(accent);
+}
+
+#syshud #container QSlider::handle {
+	background: transparent;
+	border: unset;
+	height: 5px;
+	width: 5px;
+	padding: 0px;
+	margin: 0px;
+}

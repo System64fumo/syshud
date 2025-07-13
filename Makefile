@@ -1,6 +1,6 @@
 BIN = syshud
 LIB = libsyshud.so
-PKGS = gtkmm-4.0 gtk4-layer-shell-0
+PKGS = Qt6Widgets
 SRCS = $(wildcard src/*.cpp)
 
 PREFIX ?= /usr/local
@@ -33,7 +33,7 @@ endif
 
 OBJS = $(patsubst src/%, $(BUILDDIR)/%, $(SRCS:.cpp=.o))
 
-CXXFLAGS += -Oz -s -Wall -flto -fno-exceptions -fPIC
+CXXFLAGS += -Oz -s -Wall -flto -fno-exceptions -fPIC -DQT_NO_VERSION_TAGGING
 LDFLAGS += -Wl,--no-as-needed,-z,now,-z,pack-relative-relocs
 
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
@@ -54,7 +54,7 @@ install: $(all)
 	@echo "Installing..."
 	@install -D -t $(DESTDIR)$(BINDIR) $(BUILDDIR)/$(BIN)
 	@install -D -t $(DESTDIR)$(LIBDIR) $(BUILDDIR)/$(LIB)
-	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.css
+	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.qss
 
 clean:
 	@echo "Cleaning up"
@@ -66,7 +66,7 @@ $(BIN): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(BUILDDIR)/main.o \
 	$(BUILDDIR)/config_parser.o \
 	$(CXXFLAGS) \
-	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
+	$(LDFLAGS)
 
 $(LIB): $(OBJS)
 	$(call progress, Linking $@)
@@ -74,7 +74,7 @@ $(LIB): $(OBJS)
 	$(filter-out $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o, $(OBJS)) \
 	$(CXXFLAGS) \
 	$(LDFLAGS) \
-	-shared
+	-shared -lLayerShellQtInterface
 
 $(BUILDDIR)/%.o: src/%.cpp
 	$(call progress, Compiling $@)
