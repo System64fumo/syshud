@@ -1,11 +1,11 @@
 #syshud {
-    background: transparent;
+	background: transparent;
 }
 
 #syshud #container {
-    background: palette(window);
-    border: 1px solid palette(mid);
-    border-radius: 22px;
+	background: palette(window);
+	border: 1px solid palette(mid);
+	border-radius: 22px;
 }
 
 #syshud #container QLabel {
@@ -23,9 +23,13 @@
 	width: 5px;
 }
 
-#syshud #container QSlider::sub-page {
+#syshud #container QSlider::sub-page:horizontal,
+#syshud #container QSlider::add-page:vertical {
 	border-radius: 2px;
 	background: palette(accent);
+}
+#syshud #container QSlider::sub-page:vertical {
+	background: transparent;
 }
 
 #syshud #container QSlider::handle {

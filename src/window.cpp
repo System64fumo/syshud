@@ -13,28 +13,7 @@
 syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& cfg) : config_main(cfg) {
 	setup_window();
 	setup_layer_shell();
-
-	// TODO: Enable/Disable listeners based on config
-	listener_wireplumber = new syshud_wireplumber([this](double volume, bool output) {
-		QMetaObject::invokeMethod(this, [this, volume, output]() {
-			if (output)
-				on_change('s', volume);
-			else
-				on_change('m', volume);
-		});
-	});
-
-	listener_backlight = new syshud_backlight([this]() {
-		QMetaObject::invokeMethod(this, [this]() {
-			on_change('b', listener_backlight->get_brightness());
-		});
-	}, config_main["main"]["backlight-path"]);
-
-	listener_keytoggles = new syshud_keytoggles([this]() {
-		QMetaObject::invokeMethod(this, [this]() {
-			on_change('k', 0);
-		});
-	}, config_main["main"]["keyboard-path"]);
+	setup_listeners();
 }
 
 void syshud::setup_window() {
@@ -46,13 +25,12 @@ void syshud::setup_window() {
 	const std::string& style_path_usr = std::string(getenv("HOME")) + "/.config/sys64/hud/style.qss";
 
 	// Load base style
-	if (std::filesystem::exists(style_path)) {
-		loadStyleSheet(style_path);
-	}
+	if (std::filesystem::exists(style_path))
+		load_qss(style_path);
+
 	// Load user style
-	if (std::filesystem::exists(style_path_usr)) {
-		loadStyleSheet(style_path_usr);
-	}
+	if (std::filesystem::exists(style_path_usr))
+		load_qss(style_path_usr);
 
 	setAttribute(Qt::WA_TranslucentBackground);
 	setAttribute(Qt::WA_NoSystemBackground);
@@ -79,12 +57,19 @@ void syshud::setup_window() {
 		layout->setDirection(QBoxLayout::TopToBottom);
 	}
 
-	if (config_main["main"]["show-percentage"] == "true")
+	if (config_main["main"]["show-percentage"] == "true") {
 		label = new QLabel();
+		QFontMetrics fm(label->font());
+		original_label_size = fm.height() * 2;
+		label->setFixedSize(original_label_size, original_label_size);
+		label->setAlignment(Qt::AlignCenter);
+		label->setContentsMargins(0, 0, 0, 0);
+		label->setEnabled(false);
+	}
 
 	hide_timer = new QTimer(this);
 	hide_timer->setSingleShot(true);
-	hide_timer->setInterval(std::stoi(config_main["main"]["timeout"]) * 1000);
+	hide_timer->setInterval(std::stoi(config_main["main"]["timeout"]));
 
 	if (vertical) {
 		if (config_main["main"]["show-percentage"] == "true")
@@ -99,7 +84,6 @@ void syshud::setup_window() {
 			containerLayout->addWidget(label, 0 , Qt::AlignCenter);
 	}
 
-	// TODO: Make label have a fixed size
 	if (config_main["main"]["show-percentage"] == "true") {
 		label->setContentsMargins(0, 0, 0, 0);
 		label->setEnabled(false);
@@ -112,79 +96,21 @@ void syshud::setup_window() {
 	});
 
 	QObject::connect(slider, &QSlider::valueChanged, [this](int value) {
-		if (last_reason == 's')
-			listener_wireplumber->set_volume(true, value);
+		if (false) {
+			// Do nothing here
+		}
+
+		#if defined(FEATURE_WIREPLUMBER) || defined(FEATURE_PULSEAUDIO)
+		else if (last_reason == 's')
+			listener_audio->set_volume(true, value);
 		else if (last_reason == 'm')
-			listener_wireplumber->set_volume(false, value);
+			listener_audio->set_volume(false, value);
+		#endif
+		#ifdef FEATURE_BACKLIGHT
 		else if (last_reason == 'b')
 			listener_backlight->set_brightness(value);
+		#endif
 	});
-}
-
-void syshud::on_change(const char& reason, const int& value) {
-	last_reason = reason;
-	show();
-	hide_timer->start();
-
-	std::string icon_name;
-	std::string label_text;
-	std::map<int, std::string> value_levels = {
-		{0, "muted"},
-		{1, "low"},
-		{2, "medium"},
-		{3, "high"},
-	};
-
-	// Behold! The great if else hell
-	// TODO: Consider not using unity or creating indie games
-	if (reason == 's' || reason == 'm') {
-		if (reason == 's') {
-			if (listener_wireplumber->muted)
-				icon_name = "audio-volume-muted";
-			else
-				icon_name = "audio-volume-" + value_levels[std::clamp(value / 34 + 1, 1, 3)];
-		}
-		else if (reason == 'm') {
-			if (listener_wireplumber->muted)
-				icon_name = "audio-input-microphone-muted";
-			else
-				icon_name = "audio-input-microphone-" + value_levels[std::clamp(value / 34 + 1, 1, 3)];
-		}
-		label_text = std::to_string(value) + "%";
-		slider->show();
-	}
-	else if (reason == 'k') {
-		if (listener_keytoggles->changed == 'c') {
-			icon_name = listener_keytoggles->caps_lock ? "capslock-enabled" : "capslock-disabled";
-			label_text = "Caps Lock";
-		}
-		else {
-			icon_name = listener_keytoggles->num_lock ? "numlock-enabled" : "numlock-disabled";
-			label_text = "Num Lock";
-		}
-		slider->hide();
-	}
-	else if (reason == 'b') {
-		if (value == 0)
-			icon_name = "display-brightness-off";
-		else
-			icon_name = "display-brightness-" + value_levels[value / 34 + 1];
-		label_text = std::to_string(value) + "%";
-		slider->show();
-	}
-
-	QIcon icon = QIcon::fromTheme(QString::fromStdString(icon_name + "-symbolic"));
-	QPixmap pixmap = icon.pixmap(std::stoi(config_main["main"]["icon-size"]), std::stoi(config_main["main"]["icon-size"]));
-	icon_label->setPixmap(pixmap);
-
-	slider->blockSignals(true);
-	slider->setValue(value);
-	slider->blockSignals(false);
-
-	if (config_main["main"]["show-percentage"] != "true")
-		return;
-
-	label->setText(QString::fromStdString(label_text));
 }
 
 void syshud::setup_layer_shell() {
@@ -237,13 +163,144 @@ void syshud::setup_layer_shell() {
 	layer_shell_window->setMargins({margins[0], margins[1], margins[2], margins[3]});
 }
 
-void syshud::loadStyleSheet(const std::string& filePath) {
+void syshud::setup_listeners() {
+	std::string listeners = config_main["main"]["listeners"];
+
+	#if defined(FEATURE_WIREPLUMBER) || defined(FEATURE_PULSEAUDIO)
+	bool track_speaker = (listeners.find("speakers") != std::string::npos);
+	bool track_microphone = (listeners.find("microphone") != std::string::npos);
+	if (track_speaker || track_microphone) {
+		auto callback = [this, track_speaker, track_microphone](double volume, bool output) {
+			QMetaObject::invokeMethod(this, [this, volume, output, track_speaker, track_microphone] {
+				if (output && track_speaker)
+					on_change('s', volume);
+				else if (!output && track_microphone)
+					on_change('m', volume);
+			});
+		};
+
+		#ifdef FEATURE_WIREPLUMBER
+		listener_audio = new syshud_wireplumber(callback);
+		#endif
+		#ifdef FEATURE_PULSEAUDIO
+		listener_audio = new syshud_pulseaudio(callback);
+		#endif
+	}
+	#endif
+
+	#ifdef FEATURE_BACKLIGHT
+	bool track_backlight = (listeners.find("backlight") != std::string::npos);
+	if (track_backlight) {
+		listener_backlight = new syshud_backlight([this]() {
+			QMetaObject::invokeMethod(this, [this]() {
+				on_change('b', listener_backlight->get_brightness());
+			});
+		}, config_main["main"]["backlight-path"]);
+	}
+	#endif
+
+	#ifdef FEATURE_KEYBOARD
+	bool track_keyboard = (listeners.find("keyboard") != std::string::npos);
+	if (track_keyboard) {
+		listener_keytoggles = new syshud_keytoggles([this]() {
+			QMetaObject::invokeMethod(this, [this]() {
+				on_change('k', 0);
+			});
+		}, config_main["main"]["keyboard-path"]);
+	}
+	#endif
+}
+
+void syshud::on_change(const char& reason, const int& value) {
+	last_reason = reason;
+	show();
+	hide_timer->start();
+
+	std::string icon_name;
+	std::string label_text;
+	std::map<int, std::string> value_levels = {
+		{0, "muted"},
+		{1, "low"},
+		{2, "medium"},
+		{3, "high"},
+	};
+
+	if (false) {
+		// This is here just so the other else if statements can still run.
+	}
+
+	// Behold! The great if else hell
+	// TODO: Consider not using unity or creating indie games
+	#if defined(FEATURE_WIREPLUMBER) || defined(FEATURE_PULSEAUDIO)
+	else if (reason == 's' || reason == 'm') {
+		label->setFixedSize(original_label_size, original_label_size);
+		if (reason == 's') {
+			if (listener_audio->muted)
+				icon_name = "audio-volume-muted";
+			else
+				icon_name = "audio-volume-" + value_levels[std::clamp(value / 34 + 1, 1, 3)];
+		}
+		else if (reason == 'm') {
+			if (listener_audio->muted)
+				icon_name = "audio-input-microphone-muted";
+			else
+				icon_name = "audio-input-microphone-" + value_levels[std::clamp(value / 34 + 1, 1, 3)];
+		}
+		label_text = std::to_string(value) + "%";
+		slider->show();
+	}
+	#endif
+
+	#ifdef FEATURE_BACKLIGHT
+	else if (reason == 'k') {
+		if (listener_keytoggles->changed == 'c') {
+			icon_name = listener_keytoggles->caps_lock ? "capslock-enabled" : "capslock-disabled";
+			label_text = "Caps Lock";
+		}
+		else {
+			icon_name = listener_keytoggles->num_lock ? "numlock-enabled" : "numlock-disabled";
+			label_text = "Num Lock";
+		}
+
+		label->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+		slider->hide();
+	}
+	#endif
+
+	#ifdef FEATURE_KEYBOARD
+	else if (reason == 'b') {
+		label->setFixedSize(original_label_size, original_label_size);
+		if (value == 0)
+			icon_name = "display-brightness-off";
+		else
+			icon_name = "display-brightness-" + value_levels[value / 34 + 1];
+		label_text = std::to_string(value) + "%";
+		slider->show();
+	}
+	#endif
+
+	QIcon icon = QIcon::fromTheme(QString::fromStdString(icon_name + "-symbolic"));
+	QPixmap pixmap = icon.pixmap(std::stoi(config_main["main"]["icon-size"]), std::stoi(config_main["main"]["icon-size"]));
+	icon_label->setPixmap(pixmap);
+
+	slider->blockSignals(true);
+	slider->setValue(value);
+	slider->blockSignals(false);
+
+	if (config_main["main"]["show-percentage"] != "true")
+		return;
+
+	label->setText(QString::fromStdString(label_text));
+}
+
+void syshud::load_qss(const std::string& filePath) {
 	QFile styleFile(QString::fromStdString(filePath));
 	if (styleFile.open(QFile::ReadOnly)) {
 		QString styleSheet = QLatin1String(styleFile.readAll());
 		this->setStyleSheet(styleSheet);
 		styleFile.close();
-	} else {
+	}
+	else {
 		std::fprintf(stderr, "Failed to load stylesheet: %s\n", filePath.c_str());
 	}
 }

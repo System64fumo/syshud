@@ -15,11 +15,11 @@ SRCS := $(filter-out src/backlight.cpp,$(SRCS))
 SRCS := $(filter-out src/keytoggles.cpp,$(SRCS))
 
 # TODO: Add support for both pulse and wp (Auto detect)
-ifneq (, $(shell grep -E '^#define AUDIO_PULSEAUDIO' src/config.hpp))
+ifneq (, $(shell grep -E '^#define FEATURE_PULSEAUDIO' src/config.hpp))
 	SRCS += src/pulse.cpp
 	PKGS += libpulse
 endif
-ifneq (, $(shell grep -E '^#define AUDIO_WIREPLUMBER' src/config.hpp))
+ifneq (, $(shell grep -E '^#define FEATURE_WIREPLUMBER' src/config.hpp))
 	SRCS += src/wireplumber.cpp
 	PKGS += wireplumber-0.5
 endif

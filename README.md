@@ -5,7 +5,7 @@ Syshud is a simple system status indicator<br>
 
 > [!NOTE]  
 > This project has been rewritten to use QT6 instead of GTKMM 4<br>
-> Some features may be missing.<br>
+> This branch will replace main once the rest of my shell is ported.<br>
 
 # Configuration
 syshud can be configured in 2 ways<br>
@@ -20,16 +20,15 @@ arguments:
   -i	Set icon size
   -P	Hide percentage
   -m	Set margins ("top right bottom left")
-  -t	Set timeout
-  -T	Set transition time (0 disables animations)
+  -t	Set timeout (In milliseconds)
   -b	Set custom backlight path
-  -M	Set things to monitor (audio_in, audio_out, brightness, keyboard)
+  -l	Set things to monitor (speakers, microphone, backlight, keyboard)
   -k	Set keyboard path (/dev/input/by-id/my_keyboard-event-kbd)
   -v	Prints version info
 ```
 
 To use pulseaudio instead of wireplumber,<br>
-change `#define AUDIO_WIREPLUMBER` to `#define AUDIO_PULSEAUDIO` in `src/config.hpp`
+change `#define FEATURE_WIREPLUMBER` to `#define FEATURE_PULSEAUDIO` in `src/config.hpp`
 
 # Theming
 syshud uses your QT6 theme in addition to a custom style in `/usr/share/sys64/hud/style.qss`.<br>
@@ -37,12 +36,9 @@ Should you choose to override the theme just copy it over to ~/.config/sys64/hud
 
 # Known bugs/issues
 There is no slide animation, No clue if i can re-implement that.<br>
+There is no drop shadow effect, QSS does not offer that, Might have to manually add support for that.<br>
 There are no custom value QSS object names.<br>
-Compile time selection of features is unavailable ATM.<br>
-All listeners are active even if you haven't enabled them in the config.<br>
-Vertical style seems to be inverted.<br>
-Label seems to adjust it's size more than it should.<br>
-Pulse audio support has not been ported yet.<br>
+The wireplumber implementation is unstable, A pipewire rewrite is in mind but unlikely to happen anytime soon.<br>
 
 # Credits
 [Jason White](https://gist.github.com/jasonwhite/1df6ee4b5039358701d2) for showing how to write pulseaudio stuff<br>

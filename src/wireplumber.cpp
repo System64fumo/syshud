@@ -1,5 +1,4 @@
 #include "wireplumber.hpp"
-#include <iostream>
 #include <thread>
 
 bool syshud_wireplumber::is_valid_node_id(const uint32_t& id) {
@@ -117,36 +116,46 @@ void syshud_wireplumber::on_object_manager_installed(syshud_wireplumber* self) {
 }
 
 void syshud_wireplumber::set_volume(const bool& type, const int& value) {
-	const uint32_t node_id = (type) ? output_id : input_id;
-	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100.0f));
+    const uint32_t node_id = (type) ? output_id : input_id;
+    if (!is_valid_node_id(node_id)) {
+        std::fprintf(stderr, "Invalid node ID\n");
+        return;
+    }
+
+    g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100.0f));
 }
 
 void syshud_wireplumber::initialize() {
-	wp_init(WP_INIT_PIPEWIRE);
-	core = wp_core_new(nullptr, nullptr, nullptr);
-	apis = g_ptr_array_new_with_free_func(g_object_unref);
-	om = wp_object_manager_new();
+    wp_init(WP_INIT_PIPEWIRE);
+    core = wp_core_new(nullptr, nullptr, nullptr);
+    if (!core) {
+        std::fprintf(stderr, "Failed to create WirePlumber core\n");
+        return;
+    }
 
-	g_main_context_invoke(NULL, [](gpointer user_data) -> gboolean {
-		if (wp_core_connect(static_cast<WpCore*>(user_data)) == 0)
-			std::cerr << "Could not connect to wireplumber" << std::endl;
-		return G_SOURCE_REMOVE;
-	}, core);
+    apis = g_ptr_array_new_with_free_func(g_object_unref);
+    om = wp_object_manager_new();
+    
+    // Connect to core synchronously
+    if (wp_core_connect(core) == 0) {
+        std::fprintf(stderr, "Could not connect to wireplumber\n");
+        return;
+    }
 
-	g_signal_connect_swapped(om, "installed", (GCallback)on_object_manager_installed, this);
+    g_signal_connect_swapped(om, "installed", (GCallback)on_object_manager_installed, this);
 
-	wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class", "=s", "Audio/Sink", nullptr);
+    wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
+        "media.class", "=s", "Audio/Sink", nullptr);
+    wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
+        "media.class", "=s", "Audio/Source", nullptr);
 
-	wp_object_manager_add_interest(om, WP_TYPE_NODE, WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class", "=s", "Audio/Source", nullptr);
-
-	wp_core_load_component(core, "libwireplumber-module-default-nodes-api", "module",
-		nullptr, "default-nodes-api", nullptr, (GAsyncReadyCallback)on_default_nodes_api_loaded, this);
+    // Load components in sequence
+    wp_core_load_component(core, "libwireplumber-module-default-nodes-api", "module",
+        nullptr, "default-nodes-api", nullptr, (GAsyncReadyCallback)on_default_nodes_api_loaded, this);
 }
 
 syshud_wireplumber::syshud_wireplumber(VolumeCallback callback) : callback(callback) {
-	std::thread(&syshud_wireplumber::initialize, this).detach();
+    std::thread(&syshud_wireplumber::initialize, this).detach();
 }
 
 syshud_wireplumber::~syshud_wireplumber() {

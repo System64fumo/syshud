@@ -4,7 +4,6 @@
 #include "git_info.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <signal.h>
 #include <dlfcn.h>
 
@@ -15,14 +14,14 @@ syshud_create_func syshud_create_ptr = nullptr;
 void load_libsyshud() {
 	void* handle = dlopen("libsyshud.so", RTLD_LAZY);
 	if (!handle) {
-		std::cerr << "Cannot open library: " << dlerror() << '\n';
+		std::fprintf(stderr, "Cannot open library: %s\n", dlerror());
 		exit(1);
 	}
 
 	syshud_create_ptr = (syshud_create_func)dlsym(handle, "syshud_create");
 
 	if (!syshud_create_ptr) {
-		std::cerr << "Cannot load symbols: " << dlerror() << '\n';
+		std::fprintf(stderr, "Cannot load symbols: %s\n", dlerror());
 		dlclose(handle);
 		exit(1);
 	}
@@ -72,7 +71,7 @@ int main(int argc, char* argv[]) {
 	// Read launch arguments
 	#ifdef RUNTIME_CONFIG
 	while (true) {
-		switch(getopt(argc, argv, "p:o:W:H:i:P:m:t:T:b:M:k:vh")) {
+		switch(getopt(argc, argv, "p:o:W:H:i:P:m:t:b:l:k:vh")) {
 			case 'p':
 				config["main"]["position"] = optarg;
 				continue;
@@ -105,16 +104,12 @@ int main(int argc, char* argv[]) {
 				config["main"]["timeout"] = optarg;
 				continue;
 
-			case 'T':
-				config["main"]["transition"] = optarg;
-				continue;
-
 			case 'b':
 				config["main"]["backlight"] = optarg;
 				continue;
 
-			case 'M':
-				config["main"]["monitors"] = optarg;
+			case 'l':
+				config["main"]["listeners"] = optarg;
 				continue;
 
 			case 'k':
@@ -122,29 +117,28 @@ int main(int argc, char* argv[]) {
 				continue;
 
 			case 'v':
-				std::cout << "Commit: " << GIT_COMMIT_MESSAGE << std::endl;
-				std::cout << "Date: " << GIT_COMMIT_DATE << std::endl;
+				std::printf("Commit: %s\n", GIT_COMMIT_MESSAGE);
+				std::printf("Date: %s\n", GIT_COMMIT_DATE);
 				return 0;
 
 			case 'h':
 			default :
-				std::cout << "usage:" << std::endl;
-				std::cout << "  syshud [argument...]:\n" << std::endl;
-				std::cout << "arguments:" << std::endl;
-				std::cout << "  -p	Set position" << std::endl;
-				std::cout << "  -o	Set orientation" << std::endl;
-				std::cout << "  -W	Set window width" << std::endl;
-				std::cout << "  -H	Set window Height" << std::endl;
-				std::cout << "  -i	Set icon size" << std::endl;
-				std::cout << "  -P	Hide percentage" << std::endl;
-				std::cout << "  -m	Set margins" << std::endl;
-				std::cout << "  -t	Set timeout" << std::endl;
-				std::cout << "  -T	Set transition time" << std::endl;
-				std::cout << "  -b	Set custom backlight path" << std::endl;
-				std::cout << "  -M	Set things to monitor" << std::endl;
-				std::cout << "  -k	Set keyboard path" << std::endl;
-				std::cout << "  -v	Prints version info" << std::endl;
-				std::cout << "  -h	Show this help message" << std::endl;
+				std::printf("usage:\n");
+				std::printf("  syshud [argument...]:\n\n");
+				std::printf("arguments:\n");
+				std::printf("  -p	Set position\n");
+				std::printf("  -o	Set orientation\n");
+				std::printf("  -W	Set window width\n");
+				std::printf("  -H	Set window Height\n");
+				std::printf("  -i	Set icon size\n");
+				std::printf("  -P	Hide percentage\n");
+				std::printf("  -m	Set margins\n");
+				std::printf("  -t	Set timeout\n");
+				std::printf("  -b	Set custom backlight path\n");
+				std::printf("  -l	Set things to monitor\n");
+				std::printf("  -k	Set keyboard path\n");
+				std::printf("  -v	Prints version info\n");
+				std::printf("  -h	Show this help message\n");
 				return 0;
 
 			case -1:

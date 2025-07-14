@@ -1,5 +1,4 @@
 #include "backlight.hpp"
-#include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <sys/inotify.h>
@@ -21,7 +20,7 @@ syshud_backlight::~syshud_backlight() {
 void syshud_backlight::get_backlight_path(std::string custom_backlight_path) {
 	if (custom_backlight_path != "") {
 		backlight_path = custom_backlight_path;
-		std::cout << "Backlight: " << backlight_path << std::endl;
+		std::printf("Backlight: %s\n", backlight_path.c_str());
 		return;
 	}
 
@@ -29,12 +28,12 @@ void syshud_backlight::get_backlight_path(std::string custom_backlight_path) {
 	for (const auto& entry : std::filesystem::directory_iterator(path)) {
 		if (std::filesystem::is_directory(entry.path())) {
 			backlight_path = entry.path();
-			std::cout << "Backlight: " << backlight_path << std::endl;
+			std::printf("Backlight: %s\n", backlight_path.c_str());
 			break;
 		}
 	}
 	if (backlight_path.empty())
-		std::cout << "Unable to automatically detect your backlight" << std::endl;
+		std::fprintf(stderr, "Unable to automatically detect your backlight\n");
 }
 
 int syshud_backlight::get_brightness() {
@@ -55,13 +54,13 @@ void syshud_backlight::set_brightness(const int &value) {
 void syshud_backlight::monitor_brightness_changes() {
 	inotify_fd = inotify_init();
 	if (inotify_fd < 0) {
-		std::cerr << "Failed to initialize inotify" << std::endl;
+		std::fprintf(stderr, "Failed to initialize inotify\n");
 		return;
 	}
 
 	int wd = inotify_add_watch(inotify_fd, (backlight_path + "/brightness").c_str(), IN_MODIFY);
 	if (wd < 0) {
-		std::cerr << "Failed to add watch for backlight file" << std::endl;
+		std::fprintf(stderr, "Failed to add watch for backlight file\n");
 		close(inotify_fd);
 		return;
 	}
