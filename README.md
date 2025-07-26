@@ -1,6 +1,6 @@
 # Syshud
-Syshud is a simple system status indicator written in gtkmm 4<br>
-![preview](https://github.com/System64fumo/sysvol/blob/main/preview.gif "preview")
+Syshud is a simple system status indicator.<br>
+![preview](https://github.com/System64fumo/syshud/blob/main/preview.gif "preview")<br>
 [![Packaging status](https://repology.org/badge/vertical-allrepos/syshud.svg)](https://repology.org/project/syshud/versions)
 
 # Configuration
