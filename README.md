@@ -3,10 +3,6 @@ Syshud is a simple system status indicator<br>
 ![preview](https://github.com/System64fumo/syshud/blob/qt-rewrite/preview.png "preview")<br>
 [![Packaging status](https://repology.org/badge/vertical-allrepos/syshud.svg)](https://repology.org/project/syshud/versions)
 
-> [!NOTE]  
-> This project has been rewritten to use QT6 instead of GTKMM 4<br>
-> This branch will replace main once the rest of my shell is ported.<br>
-
 # Configuration
 syshud can be configured in 2 ways<br>
 1: By changing config.hpp and recompiling (Suckless style)<br>
