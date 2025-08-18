@@ -7,12 +7,16 @@ class syshud_wireplumber {
 		syshud_wireplumber(Glib::Dispatcher*, Glib::Dispatcher*);
 		virtual ~syshud_wireplumber();
 
+		bool connected;
 		int volume;
 		bool muted;
 		const char* output_name;
 		const char* input_name;
 
-		void set_volume(const bool& type, const double& value);
+		void set_volume(bool type, double value);
+
+		WpPlugin *mixer_api;
+		WpPlugin *def_nodes_api;
 
 	private:
 		Glib::Dispatcher* input_callback;
@@ -26,10 +30,8 @@ class syshud_wireplumber {
 		uint32_t output_id = 0;
 		uint32_t input_id = 0;
 		const gchar* node_name;
-		WpPlugin *mixer_api;
-		WpPlugin *def_nodes_api;
 
-		void activatePlugins();
+		void activate_plugins();
 		static bool is_valid_node_id(const uint32_t&);
 		static void on_mixer_changed(syshud_wireplumber*, uint32_t);
 		static void on_default_nodes_api_changed(syshud_wireplumber* self);

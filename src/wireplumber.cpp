@@ -57,10 +57,6 @@ void syshud_wireplumber::on_default_nodes_api_changed(syshud_wireplumber* self) 
 
 	self->output_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(output_node), "node.name");
 	self->input_name = wp_pipewire_object_get_property(WP_PIPEWIRE_OBJECT(input_node), "node.name");
-
-	// TODO: Add verbose option
-	//std::printf("Output: %s, ID: %d\n", self->output_name, self->output_id);
-	//std::printf("Input: %s, ID: %d\n", self->input_name, self->input_id);
 }
 
 void syshud_wireplumber::on_plugin_activated(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
@@ -72,36 +68,58 @@ void syshud_wireplumber::on_plugin_activated(WpObject* p, GAsyncResult* res, sys
 	}
 }
 
-void syshud_wireplumber::activatePlugins() {
-	for (uint16_t i = 0; i < apis->len; i++) {
-		WpPlugin* plugin = static_cast<WpPlugin*>(g_ptr_array_index(apis, i));
-		pending_plugins++;
-		wp_object_activate(WP_OBJECT(plugin), WP_PLUGIN_FEATURE_ENABLED, nullptr,
-			(GAsyncReadyCallback)on_plugin_activated, this);
-	}
+void syshud_wireplumber::activate_plugins() {
+	pending_plugins = apis->len;
+	wp_object_activate(WP_OBJECT(def_nodes_api),
+		WP_PLUGIN_FEATURE_ENABLED,
+		nullptr,
+		(GAsyncReadyCallback)on_plugin_activated,
+		this);
+	wp_object_activate(WP_OBJECT(mixer_api),
+		WP_PLUGIN_FEATURE_ENABLED,
+		nullptr,
+		(GAsyncReadyCallback)on_plugin_activated,
+		this);
 }
 
 void syshud_wireplumber::on_mixer_api_loaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
-	if (!wp_core_load_component_finish(self->core, res, nullptr))
+	gboolean success = FALSE;
+	g_autoptr(GError) error = nullptr;
+	success = wp_core_load_component_finish(self->core, res, &error);
+
+	if (success == FALSE) {
+		std::fprintf(stderr, "%s", error->message);
 		return;
+	}
 
-	g_ptr_array_add(self->apis, ({
-		WpPlugin* p = wp_plugin_find(self->core, "mixer-api");
-		g_object_set(G_OBJECT(p), "scale", 1 /* cubic */, nullptr);
-		p;
-	}));
+	self->mixer_api = wp_plugin_find(self->core, "mixer-api");
+	g_object_set(G_OBJECT(self->mixer_api), "scale", 1, NULL);
+	g_ptr_array_add(self->apis, self->mixer_api);
 
-	self->activatePlugins();
+	self->activate_plugins();
 }
 
 void syshud_wireplumber::on_default_nodes_api_loaded(WpObject* p, GAsyncResult* res, syshud_wireplumber* self) {
-	if (!wp_core_load_component_finish(self->core, res, nullptr))
+	gboolean success = FALSE;
+	g_autoptr(GError) error = nullptr;
+	success = wp_core_load_component_finish(self->core, res, &error);
+
+	if (success == FALSE) {
+		std::fprintf(stderr, "%s", error->message);
 		return;
+	}
 
-	g_ptr_array_add(self->apis, wp_plugin_find(self->core, "default-nodes-api"));
+	self->def_nodes_api = wp_plugin_find(self->core, "default-nodes-api");
+	g_ptr_array_add(self->apis, self->def_nodes_api);
 
-	wp_core_load_component(self->core, "libwireplumber-module-mixer-api", "module", nullptr,
-		"mixer-api", nullptr, (GAsyncReadyCallback)on_mixer_api_loaded, self);
+	wp_core_load_component(self->core,
+		"libwireplumber-module-mixer-api",
+		"module",
+		nullptr,
+		"mixer-api",
+		nullptr,
+		(GAsyncReadyCallback)on_mixer_api_loaded,
+		self);
 }
 
 void syshud_wireplumber::on_object_manager_installed(syshud_wireplumber* self) {
@@ -116,60 +134,81 @@ void syshud_wireplumber::on_object_manager_installed(syshud_wireplumber* self) {
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Sink", &self->output_id);
 	g_signal_emit_by_name(self->def_nodes_api, "get-default-node", "Audio/Source", &self->input_id);
 
-	g_signal_connect_swapped(self->mixer_api, "changed", (GCallback)on_mixer_changed, self);
-	g_signal_connect_swapped(self->def_nodes_api, "changed", (GCallback)on_default_nodes_api_changed, self);
+	on_mixer_changed(self, self->output_id);
 
+	g_signal_connect_swapped(self->mixer_api,
+		"changed",
+		(GCallback)on_mixer_changed,
+		self);
+
+	g_signal_connect_swapped(self->def_nodes_api,
+		"changed",
+		(GCallback)on_default_nodes_api_changed,
+		self);
+
+	on_default_nodes_api_changed(self);
 }
 
-void syshud_wireplumber::set_volume(const bool& type, const double& value) {
+void syshud_wireplumber::set_volume(bool type, double value) {
+	gboolean res = FALSE;
 	const uint32_t node_id = (type) ? output_id : input_id;
-	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100), FALSE);
+	g_signal_emit_by_name(mixer_api, "set-volume", node_id, g_variant_new_double(value / 100), &res);
 }
 
-syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback, Glib::Dispatcher* output_callback) : input_callback(input_callback), output_callback(output_callback) {
-	wp_init(WP_INIT_PIPEWIRE);
-	core = wp_core_new(nullptr, nullptr, nullptr);
-	apis = g_ptr_array_new_with_free_func(g_object_unref);
-	om = wp_object_manager_new();
+syshud_wireplumber::syshud_wireplumber(Glib::Dispatcher* input_callback,Glib::Dispatcher* output_callback) :
+	connected(false), input_callback(input_callback), output_callback(output_callback) {
 
-	// This has to be done from the main thread
-	g_main_context_invoke(NULL, [](gpointer user_data) -> gboolean {
-		if (wp_core_connect(static_cast<WpCore*>(user_data)) == 0)
+	Glib::MainContext::get_default()->invoke([&]() {
+		wp_init(WP_INIT_PIPEWIRE);
+		core = wp_core_new(nullptr, nullptr, nullptr);
+		om = wp_object_manager_new();
+		apis = g_ptr_array_new_with_free_func(g_object_unref);
+
+		// Add interests
+		wp_object_manager_add_interest(
+			om,
+			WP_TYPE_NODE,
+			WP_CONSTRAINT_TYPE_PW_PROPERTY,
+			"media.class",
+			"=s",
+			"Audio/Sink",
+			nullptr);
+
+		wp_object_manager_add_interest(
+			om,
+			WP_TYPE_NODE,
+			WP_CONSTRAINT_TYPE_PW_PROPERTY,
+			"media.class",
+			"=s",
+			"Audio/Source",
+			nullptr);
+
+		// Connect
+		connected = wp_core_connect(core);
+		if (!connected) {
 			std::fprintf(stderr, "Could not connect to wireplumber\n");
-		return G_SOURCE_REMOVE;
-	}, core);
+			return false;
+		}
 
-	g_signal_connect_swapped(
-		om,
-		"installed",
-		(GCallback)on_object_manager_installed,
-		this);
+		// Add signals
+		g_signal_connect_swapped(
+			om,
+			"installed",
+			(GCallback)on_object_manager_installed,
+			this);
 
-	wp_object_manager_add_interest(
-		om,
-		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class",
-		"=s",
-		"Audio/Sink",
-		nullptr);
-
-	wp_object_manager_add_interest(
-		om,
-		WP_TYPE_NODE,WP_CONSTRAINT_TYPE_PW_PROPERTY,
-		"media.class",
-		"=s",
-		"Audio/Source",
-		nullptr);
-
-	wp_core_load_component(
-		core,
-		"libwireplumber-module-default-nodes-api",
-		"module",
-		nullptr,
-		"default-nodes-api",
-		nullptr,
-		(GAsyncReadyCallback)on_default_nodes_api_loaded,
-		this);
+		// Load stuff
+		wp_core_load_component(
+			core,
+			"libwireplumber-module-default-nodes-api",
+			"module",
+			nullptr,
+			"default-nodes-api",
+			nullptr,
+			(GAsyncReadyCallback)on_default_nodes_api_loaded,
+			this);
+		return false;
+	});
 }
 
 syshud_wireplumber::~syshud_wireplumber() {

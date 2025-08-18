@@ -33,7 +33,7 @@ endif
 
 OBJS = $(patsubst src/%, $(BUILDDIR)/%, $(SRCS:.cpp=.o))
 
-CXXFLAGS += -Oz -s -Wall -flto -fno-exceptions -fPIC
+CXXFLAGS += -Oz -s -flto -fno-exceptions -fPIC
 LDFLAGS += -Wl,--no-as-needed,-z,now,-z,pack-relative-relocs
 
 CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
