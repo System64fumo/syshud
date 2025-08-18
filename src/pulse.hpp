@@ -2,11 +2,10 @@
 #include <pulse/pulseaudio.h>
 #include <glibmm/dispatcher.h>
 
-class PulseAudio {
+class syshud_pulseaudio {
 	public:
-		PulseAudio(Glib::Dispatcher* output_callback);
-		~PulseAudio();
-		int initialize();
+		syshud_pulseaudio(Glib::Dispatcher* output_callback);
+		~syshud_pulseaudio();
 
 		int volume;
 		bool muted;

@@ -6,6 +6,7 @@
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
 
+#include "animations.hpp"
 #include "config.hpp"
 
 #ifdef AUDIO_PULSEAUDIO
@@ -29,26 +30,27 @@ class syshud : public Gtk::Window {
 
 	private:
 		std::map<std::string, std::map<std::string, std::string>> config_main;
-		bool muted = false;
+		bool muted;
 		std::string previous_class;
-		int timeout = 1;
+		int timeout;
 		char last_reason;
 		sigc::connection timeout_connection;
+		property_animator scale_animator;
 
 		#ifdef AUDIO_PULSEAUDIO
-		PulseAudio *pa;
+		syshud_pulseaudio *listener_audio;
 		#endif
 
 		#ifdef AUDIO_WIREPLUMBER
-		syshud_wireplumber *syshud_wp;
+		syshud_wireplumber *listener_audio;
 		#endif
 
 		#ifdef FEATURE_BACKLIGHT
-		syshud_backlight *backlight;
+		syshud_backlight *listener_backlight;
 		#endif
 
 		#ifdef FEATURE_KEYBOARD
-		syshud_keytoggles *keytoggle_watcher;
+		syshud_keytoggles *listener_keytoggles;
 		#endif
 
 		Gtk::Box box_layout;
@@ -67,7 +69,7 @@ class syshud : public Gtk::Window {
 		bool on_scale_change(const Gtk::ScrollType&, const double&);
 		void on_audio_callback(const bool&);
 		void on_backlight_callback();
-		void setup_monitors();
+		void setup_listeners();
 		bool timer();
 };
 

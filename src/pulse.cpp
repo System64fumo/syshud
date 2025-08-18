@@ -1,31 +1,29 @@
 #include "pulse.hpp"
 
+#include <thread>
 #include <math.h>
 
-PulseAudio::PulseAudio(Glib::Dispatcher* output_callback) {
-	this->output_callback = output_callback;
-}
+syshud_pulseaudio::syshud_pulseaudio(Glib::Dispatcher* output_callback) :
+	output_callback(output_callback) {
 
-int PulseAudio::initialize() {
-	int ret = 1;
 	mainloop = pa_mainloop_new();
 	mainloop_api = pa_mainloop_get_api(mainloop);
 	pa_signal_init(mainloop_api);
 	context = pa_context_new(mainloop_api, "syshud");
-	ret = pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
-	if (ret < 0)
-		return ret;
-
+	pa_context_connect(context, nullptr, PA_CONTEXT_NOAUTOSPAWN, nullptr);
 	pa_context_set_state_callback(context, context_state_callback, this);
-	pa_mainloop_run(mainloop, &ret);
-	return ret;
+
+	// Is this thread safe?
+	std::thread([&]() {
+		pa_mainloop_run(mainloop, NULL);
+	}).detach();
 }
 
-void PulseAudio::quit(int ret = 0) {
+void syshud_pulseaudio::quit(int ret = 0) {
 	mainloop_api->quit(mainloop_api, ret);
 }
 
-PulseAudio::~PulseAudio() {
+syshud_pulseaudio::~syshud_pulseaudio() {
 	quit(0);
 
 	// Cleanup
@@ -47,13 +45,13 @@ PulseAudio::~PulseAudio() {
 	}
 }
 
-void PulseAudio::exit_signal_callback(pa_mainloop_api *m, pa_signal_event *e, int sig, void *userdata) {
-	PulseAudio* pa = (PulseAudio*)userdata;
+void syshud_pulseaudio::exit_signal_callback(pa_mainloop_api *m, pa_signal_event *e, int sig, void *userdata) {
+	syshud_pulseaudio* pa = (syshud_pulseaudio*)userdata;
 	if (pa) pa->quit();
 }
 
-void PulseAudio::context_state_callback(pa_context *c, void *userdata) {
-	PulseAudio* pa = (PulseAudio*)userdata;
+void syshud_pulseaudio::context_state_callback(pa_context *c, void *userdata) {
+	syshud_pulseaudio* pa = (syshud_pulseaudio*)userdata;
 
 	switch (pa_context_get_state(c)) {
 		case PA_CONTEXT_CONNECTING:
@@ -73,14 +71,14 @@ void PulseAudio::context_state_callback(pa_context *c, void *userdata) {
 
 		case PA_CONTEXT_FAILED:
 		default:
-			std::fprintf(stderr, "PulseAudio failed to connect.\n");
+			std::fprintf(stderr, "Pulseaudio failed to connect.\n");
 				pa->quit(1);
 			break;
 	}
 }
 
 
-void PulseAudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t type, uint32_t idx, void *userdata) {
+void syshud_pulseaudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t type, uint32_t idx, void *userdata) {
 	unsigned facility = type & PA_SUBSCRIPTION_EVENT_FACILITY_MASK;
 
 	pa_operation *op = NULL;
@@ -95,8 +93,8 @@ void PulseAudio::subscribe_callback(pa_context *c, pa_subscription_event_type_t 
 		pa_context_get_server_info(c, server_info_callback, userdata);
 }
 
-void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
-	PulseAudio* pa = (PulseAudio*)userdata;
+void syshud_pulseaudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
+	syshud_pulseaudio* pa = (syshud_pulseaudio*)userdata;
 	if (!i)
 		return;
 
@@ -116,12 +114,12 @@ void PulseAudio::sink_info_callback(pa_context *c, const pa_sink_info *i, int eo
 	}
 }
 
-void PulseAudio::server_info_callback(pa_context *c, const pa_server_info *i, void *userdata) {
-	PulseAudio* pa = (PulseAudio*)userdata;
+void syshud_pulseaudio::server_info_callback(pa_context *c, const pa_server_info *i, void *userdata) {
+	syshud_pulseaudio* pa = (syshud_pulseaudio*)userdata;
 	pa->output_name = i->default_sink_name;
 	pa->input_name = i->default_source_name;
-	std::printf("Output: %s\n", i->default_sink_name);
-	std::printf("Input: %s\n", i->default_source_name);
+	// std::printf("Output: %s\n", i->default_sink_name);
+	// std::printf("Input: %s\n", i->default_source_name);
 	
 	pa_context_get_sink_info_by_name(c, i->default_sink_name, sink_info_callback, userdata);
 }

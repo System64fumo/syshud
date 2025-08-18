@@ -3,9 +3,9 @@
 #include <gtk4-layer-shell.h>
 #include <gtkmm/cssprovider.h>
 #include <filesystem>
-#include <thread>
+syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& cfg) :
+	config_main(cfg), muted(false), timeout(1), last_reason('s') {
 
-syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& cfg) : config_main(cfg) {
 	// Initialize layer shell
 	gtk_layer_init_for_window(gobj());
 	gtk_layer_set_namespace(gobj(), "syshud");
@@ -36,7 +36,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	set_name("syshud");
 	set_hide_on_close(true);
 	box_layout.get_style_context()->add_class("box_layout");
-	std::thread(&syshud::setup_monitors, this).detach();
+	setup_listeners();
 
 	// Set layout
 	if (config_main["main"]["orientation"][0] == 'h') {
@@ -153,14 +153,14 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	#ifdef FEATURE_BACKLIGHT
 	dispatcher_backlight.connect([&]() {
 		scale_volume.show();
-		on_change('b', backlight->get_brightness());
+		on_change('b', listener_backlight->get_brightness());
 	});
 	#endif
 
 	#ifdef FEATURE_KEYBOARD
 	dispatcher_keytoggles.connect([&]() {
 		scale_volume.hide();
-		on_change('k', keytoggle_watcher->changed);
+		on_change('k', listener_keytoggles->changed);
 	});
 	#endif
 
@@ -182,15 +182,20 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 }
 
 syshud::~syshud() {
-	#ifdef PULSEAUDIO
-	delete pa;
+	#ifdef AUDIO_PULSEAUDIO
+	delete listener_audio;
 	#else
-	delete syshud_wp;
+	delete listener_audio;
 	#endif
 }
 
 void syshud::on_change(const char& reason, const int& value) {
 	timeout_connection.disconnect();
+	if (last_reason == 's') {
+		last_reason = reason;
+		return;
+	}
+
 	last_reason = reason;
 
 	if (timeout != 1)
@@ -250,11 +255,11 @@ void syshud::on_change(const char& reason, const int& value) {
 	else if (reason == 'k') {
 		if (value == 'c') {
 			label = "Caps Lock";
-			icon = keytoggle_watcher->caps_lock ? "capslock-enabled-symbolic" : "capslock-disabled-symbolic";
+			icon = listener_keytoggles->caps_lock ? "capslock-enabled-symbolic" : "capslock-disabled-symbolic";
 		}
 		else if (value == 'n') {
 			label = "Num Lock";
-			icon = keytoggle_watcher->caps_lock ? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
+			icon = listener_keytoggles->caps_lock ? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
 		}
 	}
 	#endif
@@ -275,37 +280,33 @@ void syshud::on_change(const char& reason, const int& value) {
 
 	// Show data
 	image_volume.set_from_icon_name(icon);
-	scale_volume.set_value(value);
+	scale_animator.animate_property(&scale_volume,
+		PROPERTY_SCALE_VALUE, value, 0.25);
 	if (config_main["main"]["show-percentage"] == "true")
 		label_volume.set_label(label);
 }
 
 bool syshud::on_scale_change(const Gtk::ScrollType&, const double& val) {
+	if (false) {} // Dud
+
 	#ifdef AUDIO_WIREPLUMBER
-	if (last_reason == 'i')
-		syshud_wp->set_volume(false, val);
+	else if (last_reason == 'i')
+		listener_audio->set_volume(false, val);
 	else if (last_reason == 'o')
-		syshud_wp->set_volume(true, val);
+		listener_audio->set_volume(true, val);
 	#endif
 
 	#ifdef FEATURE_BACKLIGHT
 	else if (last_reason == 'b')
-		backlight->set_brightness(val);
+		listener_backlight->set_brightness(val);
 	#endif
 
 	return false;
 }
 
 void syshud::on_audio_callback(const bool& input) {
-	#ifdef AUDIO_PULSEAUDIO
-	const int& volume = pa->volume;
-	muted = pa->muted;
-	#endif
-
-	#ifdef AUDIO_WIREPLUMBER
-	const int& volume = syshud_wp->volume;
-	muted = syshud_wp->muted;
-	#endif
+	const int& volume = listener_audio->volume;
+	muted = listener_audio->muted;
 
 	scale_volume.show();
 	if (input)
@@ -314,44 +315,38 @@ void syshud::on_audio_callback(const bool& input) {
 		on_change('o', volume);
 }
 
-// TODO: monitors is a weird name, Consider a better name
-void syshud::setup_monitors() {
-	std::istringstream iss(config_main["main"]["monitors"]);
-	std::string monitor;
+void syshud::setup_listeners() {
+	std::istringstream iss(config_main["main"]["listeners"]);
+	std::string listener;
 
 	Glib::Dispatcher* audio_in = nullptr;
 	Glib::Dispatcher* audio_out = nullptr;
 
-	while (std::getline(iss, monitor, ',')) {
-		if (monitor == "audio_in") {
+	while (std::getline(iss, listener, ',')) {
+		if (listener == "audio_in")
 			audio_in = &dispatcher_audio_in;
-		}
-		else if (monitor == "audio_out") {
+		else if (listener == "audio_out")
 			audio_out = &dispatcher_audio_out;
-		}
 
 		#ifdef FEATURE_BACKLIGHT
-		else if (monitor == "brightness")
-			backlight = new syshud_backlight(&dispatcher_backlight, config_main["main"]["backlight-path"]);
+		else if (listener == "backlight")
+			listener_backlight = new syshud_backlight(&dispatcher_backlight, config_main["main"]["backlight-path"]);
 		#endif
 
 		#ifdef FEATURE_KEYBOARD
-		else if (monitor == "keyboard" && config_main["main"]["keyboard-path"] != "" && config_main["main"]["orientation"][0] == 'h')
-			keytoggle_watcher = new syshud_keytoggles(&dispatcher_keytoggles, config_main["main"]["keyboard-path"]);
+		else if (listener == "keyboard" && config_main["main"]["keyboard-path"] != "" && config_main["main"]["orientation"][0] == 'h')
+			listener_keytoggles = new syshud_keytoggles(&dispatcher_keytoggles, config_main["main"]["keyboard-path"]);
 		#endif
 
 		else
-			std::fprintf(stderr, "Unknown monitor: %s\n", monitor.c_str());
-
+			std::fprintf(stderr, "Unknown listener: %s\n", listener.c_str());
 	}
 
-	if (audio_in != nullptr || audio_out != nullptr) {
-		#ifdef PULSEAUDIO
-		pa = new PulseAudio(audio_out);
-		if (pa->initialize() != 0)
-			delete pa;
+	if (audio_in || audio_out) {
+		#ifdef AUDIO_PULSEAUDIO
+		listener_audio = new syshud_pulseaudio(audio_out);
 		#else
-		syshud_wp = new syshud_wireplumber(audio_in, audio_out);
+		listener_audio = new syshud_wireplumber(audio_in, audio_out);
 		#endif
 	}
 }
