@@ -4,7 +4,7 @@
 #include <gtkmm/cssprovider.h>
 #include <filesystem>
 syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& cfg) :
-	config_main(cfg), muted(false), timeout(1), last_reason('s') {
+	config_main(cfg), muted(false), timeout(-1), last_reason('s') {
 
 	// Initialize layer shell
 	gtk_layer_init_for_window(gobj());
@@ -190,6 +190,7 @@ syshud::~syshud() {
 }
 
 void syshud::on_change(const char& reason, const int& value) {
+	hide_overlay_connection.disconnect();
 	timeout_connection.disconnect();
 	if (last_reason == 's') {
 		last_reason = reason;
@@ -198,16 +199,13 @@ void syshud::on_change(const char& reason, const int& value) {
 
 	last_reason = reason;
 
-	if (timeout != 1)
-		timeout = std::stoi(config_main["main"]["timeout"]);
-
-	else if (timeout == 1) {
+	if (timeout < 0) {
 		show();
-
 		revealer_box.set_reveal_child(true);
-		timeout = std::stoi(config_main["main"]["timeout"]);
-		Glib::signal_timeout().connect(sigc::mem_fun(*this, &syshud::timer), 1000);
 	}
+
+	timeout = std::stof(config_main["main"]["timeout"]);
+	timeout_connection = Glib::signal_timeout().connect(sigc::mem_fun(*this, &syshud::timer), static_cast<unsigned int>(std::round(timeout * 1000)));
 
 	// Check if we should draw the icons or not
 	if (std::stoi(config_main["main"]["icon-size"]) == 0)
@@ -352,21 +350,18 @@ void syshud::setup_listeners() {
 }
 
 bool syshud::timer() {
-	if (timeout == 1) {
-		// Start hiding the overlay
-		revealer_box.set_reveal_child(false);
+	// Start hiding the overlay
+	revealer_box.set_reveal_child(false);
 
-		// Hide the overlay after it's no longer visible
-		timeout_connection = Glib::signal_timeout().connect([&]() {
-			hide();
-			return false;
-		}, std::stoi(config_main["main"]["transition-time"]));
-
+	// Hide the overlay after it's no longer visible
+	hide_overlay_connection = Glib::signal_timeout().connect([&]() {
+		hide();
 		return false;
-	}
-	else
-		timeout--;
-	return true;
+	}, std::stoi(config_main["main"]["transition-time"]));
+
+	timeout = -1;
+
+	return false;
 }
 
 extern "C" {
