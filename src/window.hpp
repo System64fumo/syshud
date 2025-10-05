@@ -32,8 +32,9 @@ class syshud : public Gtk::Window {
 		std::map<std::string, std::map<std::string, std::string>> config_main;
 		bool muted;
 		std::string previous_class;
-		int timeout;
+		float timeout;
 		char last_reason;
+		sigc::connection hide_overlay_connection;
 		sigc::connection timeout_connection;
 		property_animator scale_animator;
 
