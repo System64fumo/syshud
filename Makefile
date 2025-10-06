@@ -3,6 +3,7 @@ LIB = libsyshud.so
 PKGS = gtkmm-4.0 gtk4-layer-shell-0
 SRCS = $(wildcard src/*.cpp)
 
+PKG_CONFIG ?= pkg-config
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
@@ -36,8 +37,8 @@ OBJS = $(patsubst src/%, $(BUILDDIR)/%, $(SRCS:.cpp=.o))
 CXXFLAGS += -Oz -s -flto -fno-exceptions -fPIC
 LDFLAGS += -Wl,--no-as-needed,-z,now,-z,pack-relative-relocs
 
-CXXFLAGS += $(shell pkg-config --cflags $(PKGS))
-LDFLAGS += $(shell pkg-config --libs $(PKGS))
+CXXFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS))
+LDFLAGS += $(shell $(PKG_CONFIG) --libs $(PKGS))
 
 $(shell mkdir -p $(BUILDDIR))
 JOB_COUNT := $(BIN) $(LIB) $(OBJS) src/git_info.hpp
@@ -66,7 +67,7 @@ $(BIN): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(BUILDDIR)/main.o \
 	$(BUILDDIR)/config_parser.o \
 	$(CXXFLAGS) \
-	$(shell pkg-config --libs gtkmm-4.0 gtk4-layer-shell-0)
+	$(shell $(PKG_CONFIG) --libs gtkmm-4.0 gtk4-layer-shell-0)
 
 $(LIB): $(OBJS)
 	$(call progress, Linking $@)
