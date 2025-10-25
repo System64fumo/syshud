@@ -5,6 +5,7 @@
 #include <gtkmm/box.h>
 #include <gtkmm/label.h>
 #include <gtkmm/image.h>
+#include <gtkmm/icontheme.h>
 
 #include "animations.hpp"
 #include "config.hpp"
@@ -33,6 +34,7 @@ class syshud : public Gtk::Window {
 		bool muted;
 		std::string previous_class;
 		float timeout;
+		std::string icon;
 		char last_reason;
 		sigc::connection hide_overlay_connection;
 		sigc::connection timeout_connection;
@@ -60,6 +62,7 @@ class syshud : public Gtk::Window {
 		Gtk::Label label_volume;
 		Gtk::Revealer revealer_box;
 		Gtk::RevealerTransitionType transition_type;
+		Glib::RefPtr<Gtk::IconTheme> icon_theme;
 		Glib::Dispatcher dispatcher_audio_in;
 		Glib::Dispatcher dispatcher_audio_out;
 		Glib::Dispatcher dispatcher_backlight;
@@ -71,6 +74,7 @@ class syshud : public Gtk::Window {
 		void on_audio_callback(const bool&);
 		void on_backlight_callback();
 		void setup_listeners();
+		void check_icon();
 		bool timer();
 };
 

@@ -35,6 +35,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	// Initialize
 	set_name("syshud");
 	set_hide_on_close(true);
+	icon_theme = Gtk::IconTheme::get_for_display(Gdk::Display::get_default());
 	box_layout.get_style_context()->add_class("box_layout");
 	setup_listeners();
 
@@ -220,7 +221,6 @@ void syshud::on_change(const char& reason, const int& value) {
 	};
 
 	std::string label;
-	std::string icon;
 
 	// Audio input
 	if (reason == 'i') {
@@ -277,6 +277,7 @@ void syshud::on_change(const char& reason, const int& value) {
 	}
 
 	// Show data
+	check_icon();
 	image_volume.set_from_icon_name(icon);
 	scale_animator.animate_property(&scale_volume,
 		PROPERTY_SCALE_VALUE, value, 0.25);
@@ -347,6 +348,18 @@ void syshud::setup_listeners() {
 		listener_audio = new syshud_wireplumber(audio_in, audio_out);
 		#endif
 	}
+}
+
+void syshud::check_icon() {
+	if (!icon_theme->has_icon(icon))
+		std::fprintf(stderr, "[Warning] Icon: %s is missing\n", icon.c_str());
+
+	if (last_reason == 'i' || last_reason == 'o')
+		icon = "audio-volume-high-symbolic";
+	else if (last_reason == 'b')
+		icon = "display-brightness-symbolic";
+	else if (last_reason == 'k')
+		icon = "keyboard-brightness-symbolic";
 }
 
 bool syshud::timer() {
