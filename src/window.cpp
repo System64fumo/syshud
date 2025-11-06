@@ -351,15 +351,16 @@ void syshud::setup_listeners() {
 }
 
 void syshud::check_icon() {
-	if (!icon_theme->has_icon(icon))
+	if (!icon_theme->has_icon(icon)) {
 		std::fprintf(stderr, "[Warning] Icon: %s is missing\n", icon.c_str());
 
-	if (last_reason == 'i' || last_reason == 'o')
-		icon = "audio-volume-high-symbolic";
-	else if (last_reason == 'b')
-		icon = "display-brightness-symbolic";
-	else if (last_reason == 'k')
-		icon = "keyboard-brightness-symbolic";
+		if (last_reason == 'i' || last_reason == 'o')
+			icon = "audio-volume-high-symbolic";
+		else if (last_reason == 'b')
+			icon = "display-brightness-symbolic";
+		else if (last_reason == 'k')
+			icon = "keyboard-brightness-symbolic";
+	}
 }
 
 bool syshud::timer() {
