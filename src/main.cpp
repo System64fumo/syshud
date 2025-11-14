@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 				continue;
 
 			case 'b':
-				config["main"]["backlight"] = optarg;
+				config["main"]["backlight-path"] = optarg;
 				continue;
 
 			case 'l':
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
 				continue;
 
 			case 'k':
-				config["main"]["keyboard"] = optarg;
+				config["main"]["keyboard-path"] = optarg;
 				continue;
 
 			case 'v':
