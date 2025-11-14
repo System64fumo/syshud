@@ -1,0 +1,19 @@
+pkgbase = syshud-git
+	pkgdesc = Simple system status indicator
+	pkgver = 0
+	pkgrel = 1
+	url = https://github.com/System64fumo/syshud
+	arch = x86_64
+	arch = aarch64
+	license = GPL3
+	makedepends = git
+	depends = gtkmm-4.0
+	depends = gtk4-layer-shell
+	depends = wireplumber
+	depends = libevdev
+	provides = syshud
+	conflicts = syshud
+	source = git+https://github.com/System64fumo/syshud.git
+	sha256sums = SKIP
+
+pkgname = syshud-git
