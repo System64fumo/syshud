@@ -8,6 +8,7 @@ PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
+SYSTEMD_USER_DIR ?= $(LIBDIR)/systemd/user
 BUILDDIR = build
 
 SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
@@ -56,6 +57,7 @@ install: $(all)
 	@install -D -t $(DESTDIR)$(BINDIR) $(BUILDDIR)/$(BIN)
 	@install -D -t $(DESTDIR)$(LIBDIR) $(BUILDDIR)/$(LIB)
 	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.css
+	@install -D -m 0644 systemd/user/syshud.service $(DESTDIR)$(SYSTEMD_USER_DIR)/syshud.service
 
 clean:
 	@echo "Cleaning up"

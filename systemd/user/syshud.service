@@ -1,0 +1,14 @@
+[Unit]
+Description=Syshud status indicator
+Documentation=https://github.com/Magniquick/syshud
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env syshud
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

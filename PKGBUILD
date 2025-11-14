@@ -1,6 +1,6 @@
 pkgname=syshud-git
 _pkgname=syshud
-pkgver=r110.523b7f8
+pkgver=r113.9744165
 pkgrel=1
 pkgdesc="Simple system status indicator"
 arch=('x86_64' 'aarch64')
