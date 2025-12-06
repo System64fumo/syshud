@@ -333,8 +333,17 @@ void syshud::setup_listeners() {
 		#endif
 
 		#ifdef FEATURE_KEYBOARD
-		else if (listener == "keyboard" && config_main["main"]["keyboard-path"] != "" && config_main["main"]["orientation"][0] == 'h')
+		else if (listener == "keyboard") {
+			if (config_main["main"]["keyboard-path"] == "") {
+				std::fprintf(stderr, "'keyboard-path' is empty\nPick a keyboard device from /dev/input/eventN or /dev/input/by-path/* for the keyboard listener to work\n");
+				continue;
+			}
+			if (config_main["main"]["orientation"][0] == 'v') {
+				std::fprintf(stderr, "only the horizontal orientation is supported at the moment\nSwitch 'orientation' to 'h' for the keyboard listener to work\n");
+				continue;
+			}
 			listener_keytoggles = new syshud_keytoggles(&dispatcher_keytoggles, config_main["main"]["keyboard-path"]);
+		}
 		#endif
 
 		else
