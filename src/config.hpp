@@ -5,4 +5,5 @@
 #define CONFIG_FILE						// Allow the use of a config file
 #define AUDIO_WIREPLUMBER				// Use wireplumber as the audio backend
 #define FEATURE_BACKLIGHT				// Include backlight monitor
+#define FEATURE_KEYBOARD_BACKLIGHT		// Include keyboard backlight monitor
 #define FEATURE_KEYBOARD				// Include keyboard status indicator

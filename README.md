@@ -19,7 +19,8 @@ arguments:
   -t	Set timeout
   -T	Set transition time (0 disables animations)
   -b	Set custom backlight path
-  -M	Set things to monitor (audio_in, audio_out, backlight, keyboard)
+  -K	Set custom keyboard backlight path
+  -l	Set things to monitor (audio_in, audio_out, backlight, keyboard_backlight, keyboard)
   -k	Set keyboard path (/dev/input/by-id/my_keyboard-event-kbd)
   -v	Prints version info
 ```

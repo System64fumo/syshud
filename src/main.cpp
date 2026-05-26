@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 	// Read launch arguments
 	#ifdef RUNTIME_CONFIG
 	while (true) {
-		switch(getopt(argc, argv, "p:o:W:H:i:P:m:t:T:b:l:k:vh")) {
+		switch(getopt(argc, argv, "p:o:W:H:i:P:m:t:T:b:K:l:k:vh")) {
 			case 'p':
 				config["main"]["position"] = optarg;
 				continue;
@@ -116,6 +116,10 @@ int main(int argc, char* argv[]) {
 				config["main"]["backlight-path"] = optarg;
 				continue;
 
+			case 'K':
+				config["main"]["keyboard-backlight-path"] = optarg;
+				continue;
+
 			case 'l':
 				config["main"]["listeners"] = optarg;
 				continue;
@@ -144,6 +148,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "  -t	Set timeout" << std::endl;
 				std::cout << "  -T	Set transition time" << std::endl;
 				std::cout << "  -b	Set custom backlight path" << std::endl;
+				std::cout << "  -K	Set custom keyboard backlight path" << std::endl;
 				std::cout << "  -l	Set up event listeners" << std::endl;
 				std::cout << "  -k	Set keyboard path" << std::endl;
 				std::cout << "  -v	Prints version info" << std::endl;

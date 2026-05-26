@@ -19,6 +19,9 @@
 #ifdef FEATURE_BACKLIGHT
 #include "backlight.hpp"
 #endif
+#ifdef FEATURE_KEYBOARD_BACKLIGHT
+#include "keyboard_backlight.hpp"
+#endif
 #ifdef FEATURE_KEYBOARD
 #include "keytoggles.hpp"
 #endif
@@ -52,6 +55,10 @@ class syshud : public Gtk::Window {
 		syshud_backlight *listener_backlight;
 		#endif
 
+		#ifdef FEATURE_KEYBOARD_BACKLIGHT
+		syshud_keyboard_backlight *listener_keyboard_backlight;
+		#endif
+
 		#ifdef FEATURE_KEYBOARD
 		syshud_keytoggles *listener_keytoggles;
 		#endif
@@ -66,6 +73,7 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_audio_in;
 		Glib::Dispatcher dispatcher_audio_out;
 		Glib::Dispatcher dispatcher_backlight;
+		Glib::Dispatcher dispatcher_keyboard_backlight;
 		Glib::Dispatcher dispatcher_keytoggles;
 
 		void InitLayout();
@@ -73,6 +81,7 @@ class syshud : public Gtk::Window {
 		bool on_scale_change(const Gtk::ScrollType&, const double&);
 		void on_audio_callback(const bool&);
 		void on_backlight_callback();
+		void on_keyboard_backlight_callback();
 		void setup_listeners();
 		void check_icon();
 		bool timer();

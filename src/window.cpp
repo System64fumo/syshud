@@ -158,6 +158,13 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	});
 	#endif
 
+	#ifdef FEATURE_KEYBOARD_BACKLIGHT
+	dispatcher_keyboard_backlight.connect([&]() {
+		scale_volume.show();
+		on_change('K', listener_keyboard_backlight->get_brightness());
+	});
+	#endif
+
 	#ifdef FEATURE_KEYBOARD
 	dispatcher_keytoggles.connect([&]() {
 		scale_volume.hide();
@@ -187,6 +194,10 @@ syshud::~syshud() {
 	delete listener_audio;
 	#else
 	delete listener_audio;
+	#endif
+
+	#ifdef FEATURE_KEYBOARD_BACKLIGHT
+	delete listener_keyboard_backlight;
 	#endif
 }
 
@@ -249,6 +260,17 @@ void syshud::on_change(const char& reason, const int& value) {
 	}
 	#endif
 
+	#ifdef FEATURE_KEYBOARD_BACKLIGHT
+	else if (reason == 'K') {
+		if (value == 0)
+			icon = "keyboard-brightness-off-symbolic";
+		else if (value <= 50)
+			icon = "keyboard-brightness-medium-symbolic";
+		else
+			icon = "keyboard-brightness-high-symbolic";
+	}
+	#endif
+
 	#ifdef FEATURE_KEYBOARD
 	else if (reason == 'k') {
 		if (value == 'c') {
@@ -263,12 +285,13 @@ void syshud::on_change(const char& reason, const int& value) {
 	#endif
 
 	if (reason != 'k') {
+		// Use 'K' for keyboard backlight which also shows a scale
 		label = std::to_string(value) + "\%";
 
 		// Set appropiate class
 		box_layout.get_style_context()->remove_class(previous_class);
 	
-		if (muted && reason !=  'b')
+		if (muted && reason != 'b' && reason != 'K')
 			previous_class = value_levels[0];
 		else
 			previous_class = value_levels[std::clamp(value, 0, 100) / 34 + 1];
@@ -298,6 +321,11 @@ bool syshud::on_scale_change(const Gtk::ScrollType&, const double& val) {
 	#ifdef FEATURE_BACKLIGHT
 	else if (last_reason == 'b')
 		listener_backlight->set_brightness(val);
+	#endif
+
+	#ifdef FEATURE_KEYBOARD_BACKLIGHT
+	else if (last_reason == 'K')
+		listener_keyboard_backlight->set_brightness(val);
 	#endif
 
 	return false;
@@ -330,6 +358,11 @@ void syshud::setup_listeners() {
 		#ifdef FEATURE_BACKLIGHT
 		else if (listener == "backlight")
 			listener_backlight = new syshud_backlight(&dispatcher_backlight, config_main["main"]["backlight-path"]);
+		#endif
+
+		#ifdef FEATURE_KEYBOARD_BACKLIGHT
+		else if (listener == "keyboard_backlight")
+			listener_keyboard_backlight = new syshud_keyboard_backlight(&dispatcher_keyboard_backlight, config_main["main"]["keyboard-backlight-path"]);
 		#endif
 
 		#ifdef FEATURE_KEYBOARD
@@ -367,6 +400,8 @@ void syshud::check_icon() {
 			icon = "audio-volume-high-symbolic";
 		else if (last_reason == 'b')
 			icon = "display-brightness-symbolic";
+		else if (last_reason == 'K')
+			icon = "keyboard-brightness-symbolic";
 		else if (last_reason == 'k')
 			icon = "keyboard-brightness-symbolic";
 	}

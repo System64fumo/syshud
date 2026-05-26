@@ -13,6 +13,7 @@ BUILDDIR = build
 SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
 SRCS := $(filter-out src/pulse.cpp,$(SRCS))
 SRCS := $(filter-out src/backlight.cpp,$(SRCS))
+SRCS := $(filter-out src/keyboard_backlight.cpp,$(SRCS))
 SRCS := $(filter-out src/keytoggles.cpp,$(SRCS))
 
 # TODO: Add support for both pulse and wp (Auto detect)
@@ -26,6 +27,9 @@ ifneq (, $(shell grep -E '^#define AUDIO_WIREPLUMBER' src/config.hpp))
 endif
 ifneq (, $(shell grep -E '^#define FEATURE_BACKLIGHT' src/config.hpp))
 	SRCS += src/backlight.cpp
+endif
+ifneq (, $(shell grep -E '^#define FEATURE_KEYBOARD_BACKLIGHT' src/config.hpp))
+	SRCS += src/keyboard_backlight.cpp
 endif
 ifneq (, $(shell grep -E '^#define FEATURE_KEYBOARD' src/config.hpp))
 	SRCS += src/keytoggles.cpp
