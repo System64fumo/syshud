@@ -393,18 +393,40 @@ void syshud::setup_listeners() {
 }
 
 void syshud::check_icon() {
-	if (!icon_theme->has_icon(icon)) {
-		std::fprintf(stderr, "[Warning] Icon: %s is missing\n", icon.c_str());
+	if (icon_theme->has_icon(icon))
+		return;
 
-		if (last_reason == 'i' || last_reason == 'o')
-			icon = "audio-volume-high-symbolic";
-		else if (last_reason == 'b')
-			icon = "display-brightness-symbolic";
-		else if (last_reason == 'K')
-			icon = "keyboard-brightness-symbolic";
-		else if (last_reason == 'k')
-			icon = "keyboard-brightness-symbolic";
+	if (last_reason == 'i') {
+		const std::string prefix = "audio-input-microphone-";
+		const std::string suffix = "-symbolic";
+		const bool is_audio_input_icon = icon.rfind(prefix, 0) == 0
+			&& icon.size() > prefix.size() + suffix.size()
+			&& icon.compare(icon.size() - suffix.size(), suffix.size(), suffix) == 0;
+
+		if (is_audio_input_icon) {
+			const std::string level = icon.substr(prefix.size(), icon.size() - prefix.size() - suffix.size());
+			const std::string fallback_icon = "microphone-sensitivity-" + level + suffix;
+			if (icon_theme->has_icon(fallback_icon)) {
+				icon = fallback_icon;
+				return;
+			}
+		}
+		if (icon_theme->has_icon("audio-input-microphone-symbolic")) {
+			icon = "audio-input-microphone-symbolic";
+			return;
+		}
 	}
+
+	std::fprintf(stderr, "[Warning] Icon: %s is missing\n", icon.c_str());
+
+	if (last_reason == 'i' || last_reason == 'o')
+		icon = "audio-volume-high-symbolic";
+	else if (last_reason == 'b')
+		icon = "display-brightness-symbolic";
+	else if (last_reason == 'K')
+		icon = "keyboard-brightness-symbolic";
+	else if (last_reason == 'k')
+		icon = "keyboard-brightness-symbolic";
 }
 
 bool syshud::timer() {
