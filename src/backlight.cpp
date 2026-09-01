@@ -1,5 +1,6 @@
 #include "backlight.hpp"
 
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -33,7 +34,7 @@ int syshud_backlight::get_brightness() {
 	brightness_file >> brightness;
 	max_brightness_file >> max_brightness;
 
-	return (brightness / max_brightness) * 100;
+    return static_cast<int>(std::round((brightness / max_brightness) * 100));
 }
 
 void syshud_backlight::set_brightness(const double &value) {
