@@ -8,7 +8,11 @@ class syshud_wireplumber {
 		virtual ~syshud_wireplumber();
 
 		bool connected;
-		int volume;
+		int  volume;
+        int  last_output_volume = -1;
+        int  last_input_volume  = -1;
+        bool last_output_muted;
+        bool last_input_muted;
 		bool muted;
 		const char* output_name;
 		const char* input_name;

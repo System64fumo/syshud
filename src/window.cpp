@@ -204,10 +204,6 @@ syshud::~syshud() {
 void syshud::on_change(const char& reason, const int& value) {
 	hide_overlay_connection.disconnect();
 	timeout_connection.disconnect();
-	if (last_reason == 's') {
-		last_reason = reason;
-		return;
-	}
 
 	last_reason = reason;
 

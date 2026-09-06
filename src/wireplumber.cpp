@@ -7,6 +7,9 @@ bool syshud_wireplumber::is_valid_node_id(const uint32_t& id) {
 void syshud_wireplumber::on_mixer_changed(syshud_wireplumber* self, uint32_t id) {
 	GVariant* variant = nullptr;
 
+    gboolean new_muted_g = FALSE;
+    bool new_muted = false;
+
 	if (!is_valid_node_id(id))
 		return;
 
@@ -20,8 +23,10 @@ void syshud_wireplumber::on_mixer_changed(syshud_wireplumber* self, uint32_t id)
 	double temp_volume;
 	g_signal_emit_by_name(self->mixer_api, "get-volume", id, &variant);
 	g_variant_lookup(variant, "volume", "d", &temp_volume);
-	g_variant_lookup(variant, "mute", "b", &self->muted);
+	g_variant_lookup(variant, "mute", "b", &new_muted_g);
 	g_clear_pointer(&variant, g_variant_unref);
+
+    new_muted = new_muted_g;
 
 	// Figure out if the change came from an input or output device
 	const std::string media_class = std::string(
@@ -29,14 +34,42 @@ void syshud_wireplumber::on_mixer_changed(syshud_wireplumber* self, uint32_t id)
 							WP_PIPEWIRE_OBJECT(node), "media.class"));
 
 	// Set values and trigger a callback
-	self->volume = (temp_volume + 0.0001) * 100.0;
+	int new_volume = (temp_volume + 0.0001) * 100.0;
 	if (media_class == "Audio/Source") {
-		if (self->input_callback != nullptr)
-			self->input_callback->emit();
+        if (self->last_input_volume == -1) {
+            self->last_input_volume = new_volume;
+            self->last_input_muted  = new_muted;
+            return;
+        }
+        if (self->last_input_volume == new_volume && self->last_input_muted == new_muted) {
+            return;
+        }
+        else {
+            self->last_input_volume = new_volume;
+            self->last_input_muted  = new_muted;
+            self->volume = new_volume;
+            self->muted  = new_muted;
+            if (self->input_callback != nullptr)
+                self->input_callback->emit();
+        }
 	}
 	else {
-		if (self->output_callback != nullptr)
-			self->output_callback->emit();
+        if (self->last_output_volume == -1) {
+            self->last_output_volume = new_volume;
+            self->last_output_muted  = new_muted;
+            return;
+        }
+        if (self->last_output_volume == new_volume && self->last_output_muted == new_muted) {
+            return;
+        }
+        else {
+            self->last_output_volume = new_volume;
+            self->last_output_muted  = new_muted;
+            self->volume = new_volume;
+            self->muted  = new_muted;
+            if (self->output_callback != nullptr)
+                self->output_callback->emit();
+        }
 	}
 }
 
