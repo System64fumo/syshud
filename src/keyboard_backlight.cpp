@@ -1,5 +1,6 @@
 #include "keyboard_backlight.hpp"
 
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <filesystem>

@@ -1,5 +1,6 @@
 #include "backlight.hpp"
 
+#include <unistd.h>
 #include <cmath>
 #include <iostream>
 #include <fstream>
