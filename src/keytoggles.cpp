@@ -60,8 +60,8 @@ syshud_keytoggles::syshud_keytoggles(Glib::Dispatcher* callback, const std::stri
 				else if (num_lock != num_lock_prev)
 					changed = 'n';
 
-				caps_lock_prev = caps_lock;
-				num_lock_prev = num_lock;
+				caps_lock_prev = caps_lock.load();
+				num_lock_prev = num_lock.load();
 
 				callback->emit();
 			}

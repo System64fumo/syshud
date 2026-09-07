@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <unistd.h>
 #include <fstream>
 #include <filesystem>
 #include <sys/inotify.h>
@@ -38,23 +39,23 @@ int syshud_backlight::get_brightness() {
 }
 
 void syshud_backlight::set_brightness(const double &value) {
+	std::lock_guard<std::mutex> lock(brightness_mutex);
 	std::ofstream backlight_file(backlight_path + "/brightness", std::ios::trunc);
-	backlight_file << (value * max_brightness) / 100;
+	backlight_file << static_cast<int>(std::round((value * max_brightness) / 100));
 }
 
 syshud_backlight::syshud_backlight(Glib::Dispatcher* callback, std::string custom_backlight_path) {
 	get_backlight_path(custom_backlight_path);
 
-	std::thread monitor_thread([&, callback]() {
-		int inotify_fd = inotify_init();
-		inotify_add_watch(inotify_fd, backlight_path.c_str(), IN_MODIFY);
+	inotify_fd = inotify_init();
+	inotify_add_watch(inotify_fd, backlight_path.c_str(), IN_MODIFY);
 
+	std::thread monitor_thread([this, callback]() {
 		int last_brightness = get_brightness();
 		char buffer[1024];
 
 		while (true) {
-			ssize_t ret = read(inotify_fd, buffer, 1024);
-			(void)ret; // Return value does not matter
+			read(inotify_fd, buffer, 1024);
 
 			int brightness = get_brightness();
 			if (brightness != last_brightness) {

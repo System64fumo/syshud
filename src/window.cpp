@@ -22,7 +22,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	gtk_layer_set_anchor(gobj(), GTK_LAYER_SHELL_EDGE_LEFT, edge_left);
 
 	if ((edge_top && edge_bottom) || (edge_right && edge_left)) {
-		std::fprintf(stderr, "Verry funny arguments you got there\n");
+		std::fprintf(stderr, "Very funny arguments you got there\n");
 		std::fprintf(stderr, "Would be a shame if.. The program crashed right?\n");
 		exit(1);
 	}
@@ -110,7 +110,7 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	int count = 0;
 
 	while (std::getline(iss, margin_str, ' ')) {
-		const int& margin = std::stoi(margin_str);
+		const int margin = std::stoi(margin_str);
 
 		if (count == 0)
 			gtk_layer_set_margin(gobj(), GTK_LAYER_SHELL_EDGE_TOP, margin);
@@ -172,8 +172,8 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 	});
 	#endif
 
-	const std::string& style_path = "/usr/share/sys64/hud/style.css";
-	const std::string& style_path_usr = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
+	const std::string style_path = "/usr/share/sys64/hud/style.css";
+	const std::string style_path_usr = std::string(getenv("HOME")) + "/.config/sys64/hud/style.css";
 
 	// Load base style
 	if (std::filesystem::exists(style_path)) {
@@ -190,14 +190,18 @@ syshud::syshud(const std::map<std::string, std::map<std::string, std::string>>& 
 }
 
 syshud::~syshud() {
-	#ifdef AUDIO_PULSEAUDIO
 	delete listener_audio;
-	#else
-	delete listener_audio;
+
+	#ifdef FEATURE_BACKLIGHT
+	delete listener_backlight;
 	#endif
 
 	#ifdef FEATURE_KEYBOARD_BACKLIGHT
 	delete listener_keyboard_backlight;
+	#endif
+
+	#ifdef FEATURE_KEYBOARD
+	delete listener_keytoggles;
 	#endif
 }
 
@@ -275,7 +279,7 @@ void syshud::on_change(const char& reason, const int& value) {
 		}
 		else if (value == 'n') {
 			label = "Num Lock";
-			icon = listener_keytoggles->caps_lock ? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
+			icon = listener_keytoggles->num_lock ? "numlock-enabled-symbolic" : "numlock-disabled-symbolic";
 		}
 	}
 	#endif
@@ -305,21 +309,25 @@ void syshud::on_change(const char& reason, const int& value) {
 }
 
 bool syshud::on_scale_change(const Gtk::ScrollType&, const double& val) {
-	if (false) {} // Dud
-
 	#ifdef AUDIO_WIREPLUMBER
-	else if (last_reason == 'i')
+	if (last_reason == 'i')
 		listener_audio->set_volume(false, val);
 	else if (last_reason == 'o')
 		listener_audio->set_volume(true, val);
 	#endif
 
-	#ifdef FEATURE_BACKLIGHT
+	#if defined(FEATURE_BACKLIGHT) && !defined(AUDIO_WIREPLUMBER)
+	if (last_reason == 'b')
+		listener_backlight->set_brightness(val);
+	#elif defined(FEATURE_BACKLIGHT)
 	else if (last_reason == 'b')
 		listener_backlight->set_brightness(val);
 	#endif
 
-	#ifdef FEATURE_KEYBOARD_BACKLIGHT
+	#if defined(FEATURE_KEYBOARD_BACKLIGHT) && !defined(AUDIO_WIREPLUMBER) && !defined(FEATURE_BACKLIGHT)
+	if (last_reason == 'K')
+		listener_keyboard_backlight->set_brightness(val);
+	#elif defined(FEATURE_KEYBOARD_BACKLIGHT)
 	else if (last_reason == 'K')
 		listener_keyboard_backlight->set_brightness(val);
 	#endif

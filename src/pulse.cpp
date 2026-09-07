@@ -1,7 +1,7 @@
 #include "pulse.hpp"
 
 #include <thread>
-#include <math.h>
+#include <cmath>
 
 syshud_pulseaudio::syshud_pulseaudio(Glib::Dispatcher* output_callback) :
 	output_callback(output_callback) {
@@ -19,7 +19,7 @@ syshud_pulseaudio::syshud_pulseaudio(Glib::Dispatcher* output_callback) :
 	}).detach();
 }
 
-void syshud_pulseaudio::quit(int ret = 0) {
+void syshud_pulseaudio::quit(int ret) {
 	mainloop_api->quit(mainloop_api, ret);
 }
 

@@ -61,6 +61,9 @@ install: $(all)
 	@install -D -t $(DESTDIR)$(LIBDIR) $(BUILDDIR)/$(LIB)
 	@install -D -t $(DESTDIR)$(DATADIR)/sys64/hud config.conf style.css
 
+run:
+	LD_LIBRARY_PATH=$(BUILDDIR) $(BUILDDIR)/$(BIN)
+
 clean:
 	@echo "Cleaning up"
 	@rm -r $(BUILDDIR) src/git_info.hpp

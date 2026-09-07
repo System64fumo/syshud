@@ -5,10 +5,10 @@
 
 #include <filesystem>
 #include <iostream>
-#include <signal.h>
+#include <csignal>
 #include <dlfcn.h>
 
-void quit(int signum) {
+void quit(int /*signum*/) {
 	app->remove_window((Gtk::Window&)*win);
 	delete win;
 	app->release();

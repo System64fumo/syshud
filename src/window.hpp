@@ -44,23 +44,23 @@ class syshud : public Gtk::Window {
 		property_animator scale_animator;
 
 		#ifdef AUDIO_PULSEAUDIO
-		syshud_pulseaudio *listener_audio;
+		syshud_pulseaudio *listener_audio = nullptr;
 		#endif
 
 		#ifdef AUDIO_WIREPLUMBER
-		syshud_wireplumber *listener_audio;
+		syshud_wireplumber *listener_audio = nullptr;
 		#endif
 
 		#ifdef FEATURE_BACKLIGHT
-		syshud_backlight *listener_backlight;
+		syshud_backlight *listener_backlight = nullptr;
 		#endif
 
 		#ifdef FEATURE_KEYBOARD_BACKLIGHT
-		syshud_keyboard_backlight *listener_keyboard_backlight;
+		syshud_keyboard_backlight *listener_keyboard_backlight = nullptr;
 		#endif
 
 		#ifdef FEATURE_KEYBOARD
-		syshud_keytoggles *listener_keytoggles;
+		syshud_keytoggles *listener_keytoggles = nullptr;
 		#endif
 
 		Gtk::Box box_layout;
@@ -76,12 +76,9 @@ class syshud : public Gtk::Window {
 		Glib::Dispatcher dispatcher_keyboard_backlight;
 		Glib::Dispatcher dispatcher_keytoggles;
 
-		void InitLayout();
 		void on_change(const char&, const int&);
 		bool on_scale_change(const Gtk::ScrollType&, const double&);
 		void on_audio_callback(const bool&);
-		void on_backlight_callback();
-		void on_keyboard_backlight_callback();
 		void setup_listeners();
 		void check_icon();
 		bool timer();

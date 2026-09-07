@@ -1,15 +1,16 @@
 #pragma once
+#include <atomic>
 #include <glibmm/dispatcher.h>
 
 class syshud_keytoggles {
 	public:
 		syshud_keytoggles(Glib::Dispatcher* callback, const std::string& device_path);
 
-		char changed;
-		bool caps_lock;
-		bool num_lock;
+		std::atomic<char> changed{};
+		std::atomic<bool> caps_lock{false};
+		std::atomic<bool> num_lock{false};
 
 	private:
-		bool caps_lock_prev;
-		bool num_lock_prev;
+		std::atomic<bool> caps_lock_prev{false};
+		std::atomic<bool> num_lock_prev{false};
 };
