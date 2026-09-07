@@ -10,6 +10,9 @@ LIBDIR ?= $(PREFIX)/lib
 DATADIR ?= $(PREFIX)/share
 BUILDDIR = build
 
+GTKMM_LIBS := $(shell $(PKG_CONFIG) --libs gtkmm-4.0)
+LAYER_SHELL_LIBS := $(shell $(PKG_CONFIG) --libs gtk4-layer-shell-0)
+
 SRCS := $(filter-out src/wireplumber.cpp,$(SRCS))
 SRCS := $(filter-out src/pulse.cpp,$(SRCS))
 SRCS := $(filter-out src/backlight.cpp,$(SRCS))
@@ -71,7 +74,8 @@ $(BIN): src/git_info.hpp $(BUILDDIR)/main.o $(BUILDDIR)/config_parser.o
 	$(BUILDDIR)/main.o \
 	$(BUILDDIR)/config_parser.o \
 	$(CXXFLAGS) \
-	$(shell $(PKG_CONFIG) --libs gtkmm-4.0 gtk4-layer-shell-0)
+	$(LAYER_SHELL_LIBS) \
+	$(GTKMM_LIBS)
 
 $(LIB): $(OBJS)
 	$(call progress, Linking $@)
